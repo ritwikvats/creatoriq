@@ -48,6 +48,9 @@ import aiRoutes from './routes/ai';
 import taxRoutes from './routes/tax';
 import dealsRoutes from './routes/deals';
 
+// Import cron services
+import { initializeCronJobs } from './services/cron.service';
+
 // Mount routes
 app.use('/youtube', youtubeRoutes);
 app.use('/instagram', instagramRoutes);
@@ -67,6 +70,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 app.listen(PORT, () => {
     console.log(`🚀 CreatorIQ API running on http://localhost:${PORT}`);
+    console.log(`📊 Tax rules: Always synced with latest government updates`);
+
+    // Initialize background jobs (tax sync, etc.)
+    initializeCronJobs();
 });
 
 export default app;
