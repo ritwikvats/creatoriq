@@ -157,7 +157,7 @@ What's NEW or CHANGED since Jan 2026?`;
 
         const completion = await groq.chat.completions.create({
             messages: [{ role: 'user', content: prompt }],
-            model: 'llama-3.1-70b-versatile',
+            model: 'llama-3.3-70b-versatile',
             temperature: 0.3, // Lower temp for factual accuracy
         });
 
@@ -269,7 +269,7 @@ Keep it practical, actionable, and India-specific. Use bullet points.`;
                 },
                 { role: 'user', content: prompt },
             ],
-            model: 'llama-3.1-70b-versatile',
+            model: 'llama-3.3-70b-versatile',
             temperature: 0.4,
         });
 
