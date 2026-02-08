@@ -122,10 +122,25 @@ router.get('/status/:userId', async (req, res) => {
             return res.json({ connected: false });
         }
 
+        // Fetch latest analytics snapshot to get follower/post counts
+        const supabase = require('../services/supabase.service').getSupabaseClient();
+        const { data: analytics } = await supabase
+            .from('analytics_snapshots')
+            .select('metrics')
+            .eq('user_id', platform.user_id)
+            .eq('platform', 'instagram')
+            .order('snapshot_date', { ascending: false })
+            .limit(1)
+            .single();
+
+        const followers = analytics?.metrics?.followers || 0;
+        const posts = analytics?.metrics?.posts_count || 0;
+
         res.json({
             connected: true,
             username: platform.platform_username,
-            followers: null, // Can fetch from analytics if needed
+            followers,
+            posts,
         });
     } catch (error: any) {
         console.error('Instagram status error:', error);
