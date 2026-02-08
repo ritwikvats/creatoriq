@@ -1,0 +1,424 @@
+import axios from 'axios';
+
+/**
+ * OpenClaw/Fuelix AI Service - Primary AI Provider
+ * Provides AI-powered insights, code generation, and content suggestions
+ * Uses Fuelix API (OpenAI-compatible) - the same provider used by OpenClaw CLI
+ */
+
+const FUELIX_MODEL = 'gpt-5.2-chat-2025-12-11'; // Primary Fuelix model
+const FUELIX_MODEL_MINI = 'gpt-5-mini-2025-08-07'; // Fallback for faster responses
+
+class OpenClawService {
+    private apiKey: string;
+    private baseUrl: string;
+    private initialized = false;
+
+    constructor() {
+        // Don't read env vars at construction time - they may not be loaded yet
+        this.apiKey = '';
+        this.baseUrl = '';
+    }
+
+    /**
+     * Lazy initialization - reads env vars when first called
+     */
+    private ensureInitialized() {
+        if (!this.initialized) {
+            this.apiKey = process.env.OPENCLAW_API_KEY || '';
+            this.baseUrl = process.env.OPENCLAW_API_URL || 'https://api.fuelix.ai/v1';
+            this.initialized = true;
+
+            if (!this.apiKey) {
+                console.warn('⚠️ OPENCLAW_API_KEY not set. OpenClaw features will be limited.');
+            } else {
+                console.log('✅ Fuelix AI initialized:', this.apiKey.substring(0, 10) + '...');
+                console.log('   Base URL:', this.baseUrl);
+            }
+        }
+    }
+
+    /**
+     * Check if OpenClaw is available
+     */
+    isAvailable(): boolean {
+        this.ensureInitialized();
+        return !!this.apiKey;
+    }
+
+    /**
+     * Make a request to OpenClaw API
+     */
+    private async makeRequest(endpoint: string, data: any) {
+        this.ensureInitialized();
+
+        if (!this.apiKey) {
+            throw new Error('OpenClaw API key not configured');
+        }
+
+        try {
+            const response = await axios.post(`${this.baseUrl}${endpoint}`, data, {
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 30000,
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.error('OpenClaw API Error:', error.response?.data || error.message);
+            throw new Error(`OpenClaw API request failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Generate AI insights from analytics data
+     */
+    async generateInsights(analytics: any): Promise<string> {
+        // Build detailed context from actual platform data
+        const instagramContext = analytics.instagram ? `
+**Instagram Account:** @${analytics.instagram.username}
+📊 **Current Metrics:**
+- Followers: ${analytics.instagram.followers.toLocaleString()}
+- Total Posts: ${analytics.instagram.posts}
+- Engagement Rate: ${analytics.instagram.engagementRate}%
+- Avg Likes per Post: ${analytics.instagram.avgLikes.toLocaleString()}
+- Avg Comments per Post: ${analytics.instagram.avgComments}
+
+**Top Performing Posts:**
+${analytics.instagram.topPosts?.map((post: any, i: number) =>
+    `${i + 1}. ${post.like_count || 0} likes, ${post.comments_count || 0} comments`
+).join('\n') || 'No data available'}
+` : 'Instagram: Not connected';
+
+        const youtubeContext = analytics.youtube ? `
+**YouTube Channel:** ${analytics.youtube.channelName}
+📊 **Current Metrics:**
+- Subscribers: ${analytics.youtube.subscribers.toLocaleString()}
+- Total Views: ${analytics.youtube.totalViews.toLocaleString()}
+- Total Videos: ${analytics.youtube.totalVideos}
+- Avg Views per Video: ${Math.round(analytics.youtube.totalViews / analytics.youtube.totalVideos).toLocaleString()}
+` : 'YouTube: Not connected';
+
+        const prompt = `You are an expert creator growth consultant analyzing REAL performance data. Generate beautiful, actionable insights that help the creator make data-driven decisions.
+
+# CREATOR DATA:
+${instagramContext}
+${youtubeContext}
+
+# YOUR TASK:
+Analyze this data and provide insights in a BEAUTIFUL, ENGAGING format using:
+- 📊 Emojis for visual appeal
+- **Bold** for key metrics and takeaways
+- Bullet points for easy scanning
+- Specific numbers from their data
+- Industry benchmarks for comparison
+- Clear next actions
+
+# FORMAT YOUR RESPONSE LIKE THIS:
+
+## 📈 Performance Overview
+[Compare their metrics to industry standards with specific numbers]
+
+## 🎯 Key Strengths (What's Working)
+- [Specific strength with data]
+- [Another strength with numbers]
+
+## ⚠️ Growth Opportunities (What Needs Attention)
+- [Specific area with current vs ideal metrics]
+- [Another opportunity with actionable advice]
+
+## 💡 Top 3 Action Items
+1. **[Action]:** [Why + Expected outcome with numbers]
+2. **[Action]:** [Why + Expected outcome]
+3. **[Action]:** [Why + Expected outcome]
+
+## 🚀 30-Day Goal
+[One specific, measurable goal based on their current numbers]
+
+Make it HUMAN, ACTIONABLE, and backed by their REAL DATA. No generic advice!`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an expert social media analytics consultant specializing in creator growth and monetization.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 1000,
+            });
+
+            return response.choices?.[0]?.message?.content || 'Unable to generate insights';
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Generate content ideas based on niche and analytics
+     */
+    async generateContentIdeas(niche: string, analytics: any): Promise<string[]> {
+        const prompt = `Generate 5 high-performing content ideas for a ${niche} creator with the following stats:
+- Subscribers: ${analytics.subscribers || 0}
+- Avg Views: ${analytics.avgViews || 0}
+- Engagement Rate: ${analytics.engagementRate || 0}%
+
+Focus on trending topics, viral potential, and audience engagement. Return as a JSON array of content ideas.`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a viral content strategist who understands platform algorithms and audience psychology.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.9,
+                max_tokens: 800,
+            });
+
+            const content = response.choices?.[0]?.message?.content || '[]';
+
+            // Try to parse as JSON, fallback to splitting by lines
+            try {
+                return JSON.parse(content);
+            } catch {
+                return content.split('\n').filter((line: string) => line.trim().length > 0).slice(0, 5);
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Categorize revenue for tax purposes
+     */
+    async categorizeTax(description: string, amount: number): Promise<any> {
+        const prompt = `Categorize this revenue for Indian tax purposes:
+Description: ${description}
+Amount: ₹${amount}
+
+Respond with JSON:
+{
+    "category": "brand_deal|adsense|sponsorship|merchandise|course|other",
+    "taxType": "income_tax|gst|tds",
+    "deductible": true/false,
+    "notes": "brief explanation"
+}`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a tax expert specializing in Indian digital creator taxation and GST compliance.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 300,
+            });
+
+            const content = response.choices?.[0]?.message?.content || '{}';
+
+            try {
+                return JSON.parse(content);
+            } catch {
+                return {
+                    category: 'other',
+                    taxType: 'income_tax',
+                    deductible: false,
+                    notes: 'Manual categorization required'
+                };
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Analyze revenue patterns and provide recommendations
+     */
+    async analyzeRevenue(revenueData: any[]): Promise<string> {
+        const totalRevenue = revenueData.reduce((sum, item) => sum + (item.amount || 0), 0);
+        const sources = [...new Set(revenueData.map(item => item.source))];
+
+        const prompt = `Analyze this creator's revenue data:
+Total Revenue: ₹${totalRevenue}
+Revenue Sources: ${sources.join(', ')}
+Number of Transactions: ${revenueData.length}
+
+Recent Transactions:
+${revenueData.slice(0, 5).map(item => `- ${item.source}: ₹${item.amount} (${item.date})`).join('\n')}
+
+Provide:
+1. Revenue diversification analysis
+2. Growth opportunities
+3. Financial health assessment
+4. Recommendations for increasing revenue
+5. Tax optimization tips
+
+Format as clear, actionable insights.`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a financial advisor specializing in creator economy and digital monetization strategies.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 1000,
+            });
+
+            return response.choices?.[0]?.message?.content || 'Unable to analyze revenue';
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Generate code snippets for creator integrations
+     */
+    async generateCodeSnippet(description: string, language: string = 'javascript'): Promise<string> {
+        const prompt = `Generate a ${language} code snippet for: ${description}
+
+Requirements:
+- Clean, production-ready code
+- Include error handling
+- Add helpful comments
+- Follow best practices
+
+Return only the code snippet without explanations.`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an expert software engineer specializing in API integrations and automation.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 1500,
+            });
+
+            return response.choices?.[0]?.message?.content || '// Code generation failed';
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Generate automation script for creators
+     */
+    async generateAutomationScript(task: string): Promise<string> {
+        const prompt = `Create an automation script for: ${task}
+
+The script should:
+- Be production-ready and well-documented
+- Include error handling and logging
+- Follow security best practices
+- Be easy to customize
+
+Provide the complete script with setup instructions.`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an automation expert who builds robust, maintainable scripts for content creators.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.4,
+                max_tokens: 2000,
+            });
+
+            return response.choices?.[0]?.message?.content || '// Automation script generation failed';
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Generate technical content suggestions for tech creators
+     */
+    async generateTechnicalContent(topic: string, targetAudience: string): Promise<any> {
+        const prompt = `Generate technical content ideas for: ${topic}
+Target Audience: ${targetAudience}
+
+Provide 3 content ideas with:
+- Title
+- Key points to cover
+- Difficulty level
+- Estimated engagement potential
+- SEO keywords
+
+Return as structured JSON.`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a technical content strategist who understands developer audiences and trending tech topics.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.8,
+                max_tokens: 1200,
+            });
+
+            const content = response.choices?.[0]?.message?.content || '[]';
+
+            try {
+                return JSON.parse(content);
+            } catch {
+                return { ideas: [], error: 'Failed to parse response' };
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+}
+
+// Export singleton instance
+export const openClawService = new OpenClawService();

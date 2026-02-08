@@ -22,10 +22,64 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
         setError('');
 
         try {
+            // First, fetch real analytics data from all connected platforms
+            const token = localStorage.getItem('token');
+
+            // Fetch Instagram analytics
+            let instagramData = null;
+            try {
+                const igResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram/analytics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (igResponse.ok) {
+                    instagramData = await igResponse.json();
+                }
+            } catch (err) {
+                console.log('Instagram data not available');
+            }
+
+            // Fetch YouTube analytics
+            let youtubeData = null;
+            try {
+                const ytResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/youtube/analytics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (ytResponse.ok) {
+                    youtubeData = await ytResponse.json();
+                }
+            } catch (err) {
+                console.log('YouTube data not available');
+            }
+
+            // Combine all analytics data
+            const comprehensiveAnalytics = {
+                instagram: instagramData ? {
+                    followers: instagramData.account?.followers_count || 0,
+                    posts: instagramData.account?.media_count || 0,
+                    engagementRate: instagramData.account?.engagement_rate || 0,
+                    avgLikes: Math.round(instagramData.account?.avg_likes || 0),
+                    avgComments: Math.round(instagramData.account?.avg_comments || 0),
+                    topPosts: instagramData.topPosts?.slice(0, 3) || [],
+                    username: instagramData.account?.username || ''
+                } : null,
+                youtube: youtubeData ? {
+                    subscribers: youtubeData.channelStats?.subscriberCount || 0,
+                    totalViews: youtubeData.channelStats?.totalViews || 0,
+                    totalVideos: youtubeData.channelStats?.totalVideos || 0,
+                    channelName: youtubeData.channelStats?.channelName || ''
+                } : null
+            };
+
+            // Generate AI insights with comprehensive data
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/insights`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ analytics })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    analytics: comprehensiveAnalytics
+                })
             });
 
             if (!response.ok) throw new Error('Failed to generate insights');
@@ -49,8 +103,8 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
                         AI-Powered Insights
                     </h3>
                 </div>
-                <span className="text-xs font-semibold px-3 py-1 bg-primary-600 text-white rounded-full">
-                    Powered by Llama 3.1
+                <span className="text-xs font-semibold px-3 py-1 bg-gradient-to-r from-purple-600 to-primary-600 text-white rounded-full shadow-lg">
+                    Powered by Fuelix GPT-5.2
                 </span>
             </div>
 

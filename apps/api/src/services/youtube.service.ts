@@ -262,6 +262,197 @@ class YouTubeService {
             })),
         };
     }
+
+    /**
+     * Get audience demographics (age, gender, geography)
+     */
+    async getAudienceDemographics(accessToken: string, channelId: string) {
+        try {
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: this.getOAuthClient() });
+
+            // Calculate date range (last 28 days - required for demographics)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 28);
+            const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+            // Fetch geography demographics (simpler, more likely to work)
+            let geoData: any[] = [];
+            try {
+                const geoResponse = await youtubeAnalytics.reports.query({
+                    ids: `channel==${channelId}`,
+                    startDate: formatDate(startDate),
+                    endDate: formatDate(endDate),
+                    metrics: 'views',
+                    dimensions: 'country',
+                    sort: '-views',
+                    maxResults: 10,
+                    filters: 'country!=ZZ' // Exclude unknown countries
+                });
+
+                geoData = (geoResponse.data.rows || []).map((row: any) => ({
+                    country: row[0],
+                    views: row[1]
+                }));
+            } catch (geoError) {
+                console.warn('Geography data not available:', geoError);
+            }
+
+            // Try to fetch age and gender demographics (requires YPP)
+            let ageGenderData: any[] = [];
+            try {
+                const ageGenderResponse = await youtubeAnalytics.reports.query({
+                    ids: `channel==${channelId}`,
+                    startDate: formatDate(startDate),
+                    endDate: formatDate(endDate),
+                    metrics: 'viewerPercentage',
+                    dimensions: 'ageGroup,gender',
+                    sort: '-viewerPercentage',
+                    filters: 'country==US' // Demographics usually require country filter
+                });
+
+                ageGenderData = (ageGenderResponse.data.rows || []).map((row: any) => ({
+                    ageGroup: row[0],
+                    gender: row[1],
+                    percentage: parseFloat((row[2] * 100).toFixed(2))
+                }));
+            } catch (ageError: any) {
+                console.warn('Age/gender demographics not available:', ageError.message);
+                // This is expected for channels not in YPP
+            }
+
+            return {
+                ageGender: ageGenderData,
+                geography: geoData,
+                period: {
+                    start: formatDate(startDate),
+                    end: formatDate(endDate)
+                },
+                ...(ageGenderData.length === 0 && {
+                    note: 'Age/gender demographics require YouTube Partner Program eligibility'
+                })
+            };
+        } catch (error: any) {
+            console.error('Error fetching demographics:', error);
+            // Return empty data with helpful message
+            return {
+                ageGender: [],
+                geography: [],
+                period: { start: '', end: '' },
+                error: 'Demographics data not available (requires YouTube Partner Program or more watch time)'
+            };
+        }
+    }
+
+    /**
+     * Analyze best posting times based on video performance history
+     */
+    async getBestPostingTimes(accessToken: string, channelId: string) {
+        try {
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const youtube = google.youtube({ version: 'v3', auth: this.getOAuthClient() });
+
+            // Fetch recent videos (last 50) to analyze publishing patterns
+            const response = await youtube.search.list({
+                part: ['snippet'],
+                channelId: channelId,
+                order: 'date',
+                type: ['video'],
+                maxResults: 50
+            });
+
+            const videos = response.data.items || [];
+
+            // Get detailed stats for each video
+            const videoIds = videos.map(v => v.id?.videoId).filter(Boolean);
+            const statsResponse = await youtube.videos.list({
+                part: ['statistics', 'snippet'],
+                id: videoIds as string[]
+            });
+
+            const videoStats = (statsResponse.data.items || []).map(video => {
+                const publishedAt = new Date(video.snippet?.publishedAt || '');
+                const views = parseInt(video.statistics?.viewCount || '0');
+                const engagement = parseInt(video.statistics?.likeCount || '0') +
+                                 parseInt(video.statistics?.commentCount || '0');
+
+                return {
+                    dayOfWeek: publishedAt.getDay(), // 0=Sunday, 6=Saturday
+                    hourOfDay: publishedAt.getHours(),
+                    views,
+                    engagement,
+                    engagementRate: views > 0 ? (engagement / views) * 100 : 0
+                };
+            });
+
+            // Analyze by day of week
+            const dayStats = Array(7).fill(0).map(() => ({
+                count: 0,
+                totalViews: 0,
+                totalEngagement: 0
+            }));
+
+            videoStats.forEach(stat => {
+                dayStats[stat.dayOfWeek].count++;
+                dayStats[stat.dayOfWeek].totalViews += stat.views;
+                dayStats[stat.dayOfWeek].totalEngagement += stat.engagementRate;
+            });
+
+            const bestDays = dayStats
+                .map((stat, day) => ({
+                    day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day],
+                    avgViews: stat.count > 0 ? Math.round(stat.totalViews / stat.count) : 0,
+                    avgEngagement: stat.count > 0 ? parseFloat((stat.totalEngagement / stat.count).toFixed(2)) : 0,
+                    videoCount: stat.count
+                }))
+                .filter(d => d.videoCount > 0)
+                .sort((a, b) => b.avgEngagement - a.avgEngagement)
+                .slice(0, 3);
+
+            // Analyze by hour of day
+            const hourStats = Array(24).fill(0).map(() => ({
+                count: 0,
+                totalViews: 0,
+                totalEngagement: 0
+            }));
+
+            videoStats.forEach(stat => {
+                hourStats[stat.hourOfDay].count++;
+                hourStats[stat.hourOfDay].totalViews += stat.views;
+                hourStats[stat.hourOfDay].totalEngagement += stat.engagementRate;
+            });
+
+            const bestHours = hourStats
+                .map((stat, hour) => ({
+                    hour: `${hour}:00`,
+                    avgViews: stat.count > 0 ? Math.round(stat.totalViews / stat.count) : 0,
+                    avgEngagement: stat.count > 0 ? parseFloat((stat.totalEngagement / stat.count).toFixed(2)) : 0,
+                    videoCount: stat.count
+                }))
+                .filter(h => h.videoCount > 0)
+                .sort((a, b) => b.avgEngagement - a.avgEngagement)
+                .slice(0, 5);
+
+            return {
+                bestDays,
+                bestHours,
+                recommendation: bestDays.length > 0 && bestHours.length > 0
+                    ? `Best time to post: ${bestDays[0].day} at ${bestHours[0].hour}`
+                    : 'Not enough data yet - post consistently to build insights',
+                videosAnalyzed: videoStats.length
+            };
+        } catch (error: any) {
+            console.error('Error analyzing posting times:', error);
+            return {
+                bestDays: [],
+                bestHours: [],
+                recommendation: 'Unable to analyze posting times',
+                videosAnalyzed: 0,
+                error: error.message
+            };
+        }
+    }
 }
 
 // Export singleton instance

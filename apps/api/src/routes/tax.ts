@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { taxService } from '../services/tax.service';
 import * as taxUpdatesService from '../services/tax-updates.service';
+import { taxCalculatorService } from '../services/tax-calculator.service';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Get tax summary for a user
-router.get('/:userId/summary', async (req, res) => {
-    const { userId } = req.params;
+// Get tax summary for authenticated user
+router.get('/summary', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
 
     try {
@@ -14,7 +16,7 @@ router.get('/:userId/summary', async (req, res) => {
         res.json(summary);
     } catch (error: any) {
         console.error('Tax summary error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
@@ -36,6 +38,28 @@ router.get('/updates', async (req, res) => {
             lastChecked: new Date().toISOString(),
             currentRules: taxUpdatesService.CURRENT_TAX_RULES,
         });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Calculate tax liability
+router.post('/calculate', (req, res) => {
+    try {
+        const result = taxCalculatorService.calculateTax(req.body);
+        res.json(result);
+    } catch (error: any) {
+        console.error('Tax calculation error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Calculate advance tax installments
+router.post('/advance-tax', (req, res) => {
+    try {
+        const { annualTax } = req.body;
+        const installments = taxCalculatorService.calculateAdvanceTax(annualTax);
+        res.json({ installments });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

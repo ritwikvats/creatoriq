@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { revenueService } from '../services/revenue.service';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Get all revenue entries for a user
-router.get('/:userId', async (req, res) => {
-    const { userId } = req.params;
+// Get all revenue entries for authenticated user
+router.get('/', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
     const { startDate, endDate } = req.query;
 
     try {
@@ -17,48 +18,57 @@ router.get('/:userId', async (req, res) => {
         res.json({ revenue });
     } catch (error: any) {
         console.error('Get revenue error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 // Add new revenue entry
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
+
     try {
-        const revenue = await revenueService.createRevenue(req.body);
+        const revenue = await revenueService.createRevenue({
+            ...req.body,
+            user_id: userId, // Ensure user_id is set from authenticated user
+        });
         res.status(201).json({ revenue });
     } catch (error: any) {
         console.error('Create revenue error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 // Update revenue entry
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAuth, async (req, res, next) => {
     const { id } = req.params;
+    const userId = req.user!.id;
+
     try {
-        const revenue = await revenueService.updateRevenue(id, req.body);
+        const revenue = await revenueService.updateRevenue(id, userId, req.body);
         res.json({ revenue });
     } catch (error: any) {
         console.error('Update revenue error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 // Delete revenue entry
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res, next) => {
     const { id } = req.params;
+    const userId = req.user!.id;
+
     try {
-        await revenueService.deleteRevenue(id);
+        await revenueService.deleteRevenue(id, userId);
         res.json({ message: 'Revenue entry deleted successfully' });
     } catch (error: any) {
         console.error('Delete revenue error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 // Get revenue summary (total by source, month, etc.)
-router.get('/:userId/summary', async (req, res) => {
-    const { userId } = req.params;
+router.get('/summary', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
     const { startDate, endDate } = req.query;
 
     try {
@@ -70,7 +80,7 @@ router.get('/:userId/summary', async (req, res) => {
         res.json(summary);
     } catch (error: any) {
         console.error('Revenue summary error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 

@@ -4,6 +4,7 @@
  */
 
 import * as taxUpdatesService from './tax-updates.service';
+import { scheduleAnalyticsSnapshots } from '../jobs/analytics-snapshot.job';
 
 // Run daily at 6 AM IST to sync tax rules
 export function startTaxSyncScheduler() {
@@ -28,4 +29,5 @@ export function startTaxSyncScheduler() {
 export function initializeCronJobs() {
     console.log('🚀 Initializing background jobs...');
     startTaxSyncScheduler();
+    scheduleAnalyticsSnapshots();
 }

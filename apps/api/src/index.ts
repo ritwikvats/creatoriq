@@ -30,6 +30,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        apiLogger.logRequest(req.method, req.path, undefined, duration);
+    });
+    next();
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'CreatorIQ API is running' });
@@ -57,6 +67,9 @@ import revenueRoutes from './routes/revenue';
 import aiRoutes from './routes/ai';
 import taxRoutes from './routes/tax';
 import dealsRoutes from './routes/deals';
+import analyticsRoutes from './routes/analytics';
+import audienceRoutes from './routes/audience';
+import openclawRoutes from './routes/openclaw';
 
 // Import cron services
 import { initializeCronJobs } from './services/cron.service';
@@ -66,17 +79,21 @@ app.use('/youtube', youtubeRoutes);
 app.use('/instagram', instagramRoutes);
 app.use('/revenue', revenueRoutes);
 app.use('/ai', aiRoutes);
+app.use('/openclaw', openclawRoutes);
 app.use('/tax', taxRoutes);
 app.use('/deals', dealsRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/audience', audienceRoutes);
 
-// Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({
-        error: 'Internal Server Error',
-        message: err.message,
-    });
-});
+// Import error handlers
+import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { apiLogger } from './services/logger.service';
+
+// 404 handler (must be after all routes)
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`🚀 CreatorIQ API running on http://localhost:${PORT}`);

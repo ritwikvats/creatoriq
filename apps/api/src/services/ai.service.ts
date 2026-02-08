@@ -1,6 +1,14 @@
 import Groq from 'groq-sdk';
+import { openClawService } from './openclaw.service';
+import { apiLogger } from './logger.service';
 
-// Lazy initialization - only create client when first accessed
+/**
+ * AI Service for CreatorIQ
+ * Primary: OpenClaw AI (advanced capabilities)
+ * Fallback: Groq (Llama 3.3 models)
+ */
+
+// Lazy initialization for Groq
 let groqInstance: Groq | null = null;
 
 function getGroqClient(): Groq {
@@ -14,14 +22,10 @@ function getGroqClient(): Groq {
     return groqInstance;
 }
 
-/**
- * AI Service for CreatorIQ
- * Uses Llama 3.1 70B for best quality insights
- */
 export const aiService = {
     /**
      * Generate AI-powered insights from analytics data
-     * Model: llama-3.1-70b-versatile (best for complex analysis)
+     * Primary: OpenClaw | Fallback: Groq
      */
     async generateInsights(analyticsData: {
         views?: number;
@@ -29,7 +33,19 @@ export const aiService = {
         subscribers?: number;
         revenue?: number;
     }) {
+        // Try OpenClaw first (primary provider)
+        if (openClawService.isAvailable()) {
+            try {
+                apiLogger.info('Using OpenClaw for insights generation');
+                return await openClawService.generateInsights(analyticsData);
+            } catch (error) {
+                apiLogger.warn('OpenClaw failed, falling back to Groq', { error });
+            }
+        }
+
+        // Fallback to Groq
         try {
+            apiLogger.info('Using Groq (fallback) for insights generation');
             const groq = getGroqClient();
             const completion = await groq.chat.completions.create({
                 messages: [
@@ -42,7 +58,7 @@ export const aiService = {
                         content: `Analyze this creator's performance data and provide insights:\n\nViews: ${analyticsData.views || 0}\nEngagement Rate: ${analyticsData.engagement || 0}%\nSubscribers: ${analyticsData.subscribers || 0}\nRevenue: ₹${analyticsData.revenue || 0}\n\nProvide 3-4 actionable insights.`
                     }
                 ],
-                model: 'llama-3.3-70b-versatile', // Latest Llama 3.3 model
+                model: 'llama-3.3-70b-versatile',
                 temperature: 0.7,
                 max_tokens: 300,
             });
@@ -56,10 +72,22 @@ export const aiService = {
 
     /**
      * Categorize revenue for tax purposes
-     * Model: llama-3.1-8b-instant (faster for simple tasks)
+     * Primary: OpenClaw | Fallback: Groq
      */
     async categorizeTax(description: string, amount: number) {
+        // Try OpenClaw first
+        if (openClawService.isAvailable()) {
+            try {
+                apiLogger.info('Using OpenClaw for tax categorization');
+                return await openClawService.categorizeTax(description, amount);
+            } catch (error) {
+                apiLogger.warn('OpenClaw failed, falling back to Groq', { error });
+            }
+        }
+
+        // Fallback to Groq
         try {
+            apiLogger.info('Using Groq (fallback) for tax categorization');
             const groq = getGroqClient();
             const completion = await groq.chat.completions.create({
                 messages: [
@@ -72,8 +100,8 @@ export const aiService = {
                         content: `Categorize this income for tax purposes:\n\nDescription: "${description}"\nAmount: ₹${amount}\n\nProvide: Category, GST applicability, TDS rate, and any relevant deductions.`
                     }
                 ],
-                model: 'llama-3.2-1b-preview', // Fast and efficient
-                temperature: 0.3, // Lower for more consistent categorization
+                model: 'llama-3.2-1b-preview',
+                temperature: 0.3,
                 max_tokens: 200,
             });
 
@@ -86,10 +114,23 @@ export const aiService = {
 
     /**
      * Generate content ideas based on niche and trends
-     * Model: llama-3.1-70b-versatile (best for creative generation)
+     * Primary: OpenClaw | Fallback: Groq
      */
     async generateContentIdeas(niche: string, recentTopics: string[] = []) {
+        // Try OpenClaw first
+        if (openClawService.isAvailable()) {
+            try {
+                apiLogger.info('Using OpenClaw for content ideas');
+                const analytics = { subscribers: 0, avgViews: 0, engagementRate: 0 };
+                return await openClawService.generateContentIdeas(niche, analytics);
+            } catch (error) {
+                apiLogger.warn('OpenClaw failed, falling back to Groq', { error });
+            }
+        }
+
+        // Fallback to Groq
         try {
+            apiLogger.info('Using Groq (fallback) for content ideas');
             const groq = getGroqClient();
             const completion = await groq.chat.completions.create({
                 messages: [
@@ -102,8 +143,8 @@ export const aiService = {
                         content: `Generate 5 viral content ideas for a ${niche} creator.\n\nRecent successful topics: ${recentTopics.join(', ') || 'None'}\n\nMake ideas specific to Indian audience and current trends. Format as a numbered list.`
                     }
                 ],
-                model: 'llama-3.3-70b-versatile', // Best for creative tasks
-                temperature: 0.9, // Higher for more creative ideas
+                model: 'llama-3.3-70b-versatile',
+                temperature: 0.9,
                 max_tokens: 400,
             });
 
@@ -116,10 +157,27 @@ export const aiService = {
 
     /**
      * Analyze revenue trends and provide financial advice
-     * Model: llama-3.1-70b-versatile (best for financial analysis)
+     * Primary: OpenClaw | Fallback: Groq
      */
     async analyzeRevenue(revenueHistory: { month: string; amount: number }[]) {
+        // Try OpenClaw first
+        if (openClawService.isAvailable()) {
+            try {
+                apiLogger.info('Using OpenClaw for revenue analysis');
+                const revenueData = revenueHistory.map(item => ({
+                    date: item.month,
+                    amount: item.amount,
+                    source: 'mixed'
+                }));
+                return await openClawService.analyzeRevenue(revenueData);
+            } catch (error) {
+                apiLogger.warn('OpenClaw failed, falling back to Groq', { error });
+            }
+        }
+
+        // Fallback to Groq
         try {
+            apiLogger.info('Using Groq (fallback) for revenue analysis');
             const groq = getGroqClient();
             const completion = await groq.chat.completions.create({
                 messages: [

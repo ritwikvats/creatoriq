@@ -1,32 +1,30 @@
 import { Router } from 'express';
 import { youtubeService } from '../services/youtube.service';
 import { getSupabaseClient } from '../services/supabase.service';
+import { requireAuth } from '../middleware/auth.middleware';
+import { APIError } from '../middleware/error-handler';
 
 const router = Router();
 
 /**
  * GET /youtube/auth
- * Start YouTube OAuth flow - redirect user to Google consent screen
+ * Get YouTube OAuth URL for authenticated user
+ * Requires authentication
  */
-router.get('/auth', async (req, res) => {
+router.get('/auth', requireAuth, async (req, res, next) => {
     try {
-        let userId = req.query.userId as string;
-
-        if (!userId) {
-            // For testing: use test UUID
-            userId = '00000000-0000-0000-0000-000000000001';
-            console.log('⚠️ No userId provided for YouTube auth, using test UUID');
-        }
+        const userId = req.user!.id;
 
         // Generate OAuth URL with state parameter
         const authUrl = youtubeService.getAuthUrl();
         const urlWithState = `${authUrl}&state=${userId}`;
 
-        // Redirect to Google OAuth
-        res.redirect(urlWithState);
+        // Return the OAuth URL instead of redirecting
+        // This allows the frontend to handle the redirect with proper auth headers
+        res.json({ authUrl: urlWithState });
     } catch (error: any) {
         console.error('YouTube auth error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
@@ -129,11 +127,11 @@ router.get('/callback', async (req, res) => {
 });
 
 /**
- * GET /youtube/stats/:userId
- * Get YouTube channel statistics for a user
+ * GET /youtube/stats
+ * Get YouTube channel statistics for authenticated user
  */
-router.get('/stats/:userId', async (req, res) => {
-    const { userId } = req.params;
+router.get('/stats', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
 
     try {
         const supabase = getSupabaseClient();
@@ -147,7 +145,7 @@ router.get('/stats/:userId', async (req, res) => {
             .single();
 
         if (error || !platform) {
-            return res.status(404).json({
+            return res.json({
                 error: 'YouTube not connected',
                 connected: false,
             });
@@ -208,16 +206,16 @@ router.get('/stats/:userId', async (req, res) => {
         });
     } catch (error: any) {
         console.error('YouTube stats error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 /**
- * POST /youtube/disconnect/:userId
- * Disconnect YouTube account
+ * POST /youtube/disconnect
+ * Disconnect YouTube account for authenticated user
  */
-router.post('/disconnect/:userId', async (req, res) => {
-    const { userId } = req.params;
+router.post('/disconnect', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
 
     try {
         const supabase = getSupabaseClient();
@@ -235,39 +233,26 @@ router.post('/disconnect/:userId', async (req, res) => {
         res.json({ success: true, message: 'YouTube disconnected' });
     } catch (error: any) {
         console.error('YouTube disconnect error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
     }
 });
 
 /**
- * GET /youtube/status/:userId
- * Check if YouTube is connected for a user
+ * GET /youtube/status
+ * Check if YouTube is connected for authenticated user
  */
-router.get('/status/:userId', async (req, res) => {
-    let { userId } = req.params;
+router.get('/status', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
 
     try {
         const supabase = getSupabaseClient();
 
-        let { data: platform, error } = await supabase
+        const { data: platform, error } = await supabase
             .from('connected_platforms')
             .select('platform_username, last_synced_at')
             .eq('user_id', userId)
             .eq('platform', 'youtube')
             .single();
-
-        // Fallback to test user for testing
-        if ((error || !platform) && userId !== '00000000-0000-0000-0000-000000000001') {
-            console.log('⚠️ No YouTube connection for user, checking test user...');
-            const testResult = await supabase
-                .from('connected_platforms')
-                .select('platform_username, last_synced_at')
-                .eq('user_id', '00000000-0000-0000-0000-000000000001')
-                .eq('platform', 'youtube')
-                .single();
-            platform = testResult.data;
-            error = testResult.error;
-        }
 
         if (error || !platform) {
             return res.json({ connected: false });

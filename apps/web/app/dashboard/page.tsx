@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import DashboardStats from '@/components/DashboardStats';
-import AnalyticsCharts from '@/components/AnalyticsCharts';
+import TimelineChart from '@/components/TimelineChart';
 import AIInsights from '@/components/AIInsights';
 import ConnectYouTube from '@/components/ConnectYouTube';
 import ConnectInstagram from '@/components/ConnectInstagram';
@@ -66,14 +66,12 @@ export default function DashboardPage() {
     }, [user, youtubeConnected]);
 
     const fetchYouTubeData = async () => {
-        // Use test UUID for now since proper auth isn't implemented
-        const userId = user?.id || '00000000-0000-0000-0000-000000000001';
+        if (!user) return;
 
         setFetchingYouTube(true);
         try {
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/youtube/stats/${userId}`);
-            const data = await response.json();
+            const { api } = await import('@/lib/api-client');
+            const data = await api.get('/youtube/stats');
 
             if (data.connected && data.channel) {
                 setYoutubeData(data);
@@ -140,8 +138,8 @@ export default function DashboardPage() {
 
                 {/* Platform Connection Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <ConnectYouTube userId={user.id} onConnectionChange={handleConnectionChange} />
-                    <ConnectInstagram userId={user.id} />
+                    <ConnectYouTube onConnectionChange={handleConnectionChange} />
+                    <ConnectInstagram />
                 </div>
 
                 {/* Main Dashboard Grid */}
@@ -163,17 +161,7 @@ export default function DashboardPage() {
                         />
 
                         {/* Main Chart */}
-                        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-gray-100">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-xl font-bold text-dark-800">Performance Trends</h2>
-                                <select className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary-500">
-                                    <option>Last 30 Days</option>
-                                    <option>Last 7 Days</option>
-                                    <option>This Month</option>
-                                </select>
-                            </div>
-                            <AnalyticsCharts timelineData={[]} />
-                        </div>
+                        <TimelineChart userId={user.id} platform="all" days={30} />
                     </div>
 
                     {/* Sidebar Area */}

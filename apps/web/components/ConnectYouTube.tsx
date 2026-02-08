@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Youtube, Check, X, Loader2, RefreshCw } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
+import { api, getAuthToken } from '@/lib/api-client';
 
 interface ConnectYouTubeProps {
-    userId: string;
     onConnectionChange?: (connected: boolean) => void;
 }
 
-export default function ConnectYouTube({ userId, onConnectionChange }: ConnectYouTubeProps) {
-    // Hardcode API URL for now to resolve environment loading issues
-    const API_URL = 'http://localhost:3001';
+export default function ConnectYouTube({ onConnectionChange }: ConnectYouTubeProps) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     const [connected, setConnected] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -22,12 +20,11 @@ export default function ConnectYouTube({ userId, onConnectionChange }: ConnectYo
     // Check connection status on mount
     useEffect(() => {
         checkConnectionStatus();
-    }, [userId]);
+    }, []);
 
     const checkConnectionStatus = async () => {
         try {
-            const response = await fetch(`${API_URL}/youtube/status/${userId}`);
-            const data = await response.json();
+            const data = await api.get('/youtube/status');
 
             setConnected(data.connected);
             setChannelName(data.channelName || '');
@@ -44,10 +41,23 @@ export default function ConnectYouTube({ userId, onConnectionChange }: ConnectYo
         }
     };
 
-    const handleConnect = () => {
+    const handleConnect = async () => {
         setConnecting(true);
-        // Redirect to backend OAuth endpoint
-        window.location.href = `${API_URL}/youtube/auth?userId=${userId}`;
+        try {
+            // Get OAuth URL from backend (requires authentication)
+            const data = await api.get('/youtube/auth');
+
+            if (data.authUrl) {
+                // Redirect browser to Google OAuth
+                window.location.href = data.authUrl;
+            } else {
+                throw new Error('No auth URL returned');
+            }
+        } catch (error) {
+            console.error('Failed to start OAuth flow:', error);
+            alert('Failed to connect. Please try again.');
+            setConnecting(false);
+        }
     };
 
     const handleDisconnect = async () => {
@@ -57,21 +67,14 @@ export default function ConnectYouTube({ userId, onConnectionChange }: ConnectYo
 
         setLoading(true);
         try {
-            const response = await fetch(
-                `${API_URL}/youtube/disconnect/${userId}`,
-                { method: 'POST' }
-            );
+            await api.post('/youtube/disconnect');
 
-            if (response.ok) {
-                setConnected(false);
-                setChannelName('');
-                setLastSynced(null);
+            setConnected(false);
+            setChannelName('');
+            setLastSynced(null);
 
-                if (onConnectionChange) {
-                    onConnectionChange(false);
-                }
-            } else {
-                alert('Failed to disconnect YouTube');
+            if (onConnectionChange) {
+                onConnectionChange(false);
             }
         } catch (error) {
             console.error('Failed to disconnect:', error);

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
+import { openClawService } from '../services/openclaw.service';
 
 const router = Router();
 
@@ -120,15 +121,27 @@ router.post('/analyze-revenue', async (req: Request, res: Response) => {
  * Check AI service status
  */
 router.get('/status', (req: Request, res: Response) => {
+    const openClawAvailable = openClawService.isAvailable();
+
     res.json({
         success: true,
         status: 'operational',
-        provider: 'Groq',
+        primaryProvider: openClawAvailable ? 'Fuelix (OpenClaw)' : 'Groq (Fallback)',
+        providers: {
+            fuelix: {
+                available: openClawAvailable,
+                models: ['gpt-5.2-chat-2025-12-11', 'gpt-5-mini-2025-08-07']
+            },
+            groq: {
+                available: true,
+                models: ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant']
+            }
+        },
         models: {
-            insights: 'llama-3.1-70b-versatile',
-            categorization: 'llama-3.1-8b-instant',
-            contentGeneration: 'llama-3.1-70b-versatile',
-            revenueAnalysis: 'llama-3.1-70b-versatile'
+            insights: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)',
+            categorization: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-8b-instant (Groq)',
+            contentGeneration: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)',
+            revenueAnalysis: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)'
         }
     });
 });

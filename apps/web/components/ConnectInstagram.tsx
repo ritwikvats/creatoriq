@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Instagram, Check, X, Loader2, RefreshCw } from 'lucide-react';
+import { api, getAuthToken } from '@/lib/api-client';
 
 interface ConnectInstagramProps {
-    userId: string;
     onConnectionChange?: (connected: boolean) => void;
 }
 
-export default function ConnectInstagram({ userId, onConnectionChange }: ConnectInstagramProps) {
-    const API_URL = 'http://localhost:3001';
+export default function ConnectInstagram({ onConnectionChange }: ConnectInstagramProps) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     const [connected, setConnected] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -19,20 +19,17 @@ export default function ConnectInstagram({ userId, onConnectionChange }: Connect
 
     useEffect(() => {
         checkConnectionStatus();
-    }, [userId]);
+    }, []);
 
     const checkConnectionStatus = async () => {
         try {
-            const response = await fetch(`${API_URL}/instagram/status/${userId}`);
-            if (response.ok) {
-                const data = await response.json();
-                setConnected(data.connected);
-                setUsername(data.username || '');
-                setFollowers(data.followers || null);
+            const data = await api.get('/instagram/status');
+            setConnected(data.connected);
+            setUsername(data.username || '');
+            setFollowers(data.followers || null);
 
-                if (onConnectionChange) {
-                    onConnectionChange(data.connected);
-                }
+            if (onConnectionChange) {
+                onConnectionChange(data.connected);
             }
         } catch (error) {
             console.error('Failed to check Instagram status:', error);
@@ -45,16 +42,18 @@ export default function ConnectInstagram({ userId, onConnectionChange }: Connect
     const handleConnect = async () => {
         setConnecting(true);
         try {
-            const response = await fetch(`${API_URL}/instagram/auth`);
-            const data = await response.json();
+            // Get Instagram OAuth URL (requires authentication)
+            const data = await api.get('/instagram/auth');
+
             if (data.authUrl) {
+                // Redirect to Instagram OAuth
                 window.location.href = data.authUrl;
             } else {
-                console.error('No auth URL returned');
-                setConnecting(false);
+                throw new Error('No auth URL returned');
             }
         } catch (error) {
             console.error('Failed to get auth URL:', error);
+            alert('Failed to connect. Please try again.');
             setConnecting(false);
         }
     };
@@ -66,14 +65,14 @@ export default function ConnectInstagram({ userId, onConnectionChange }: Connect
 
         setLoading(true);
         try {
-            const response = await fetch(`${API_URL}/instagram/disconnect/${userId}`, { method: 'POST' });
-            if (response.ok) {
-                setConnected(false);
-                setUsername('');
-                if (onConnectionChange) onConnectionChange(false);
-            }
+            // Note: This endpoint doesn't exist yet, we need to add it
+            await api.post('/instagram/disconnect');
+            setConnected(false);
+            setUsername('');
+            if (onConnectionChange) onConnectionChange(false);
         } catch (error) {
             console.error('Failed to disconnect Instagram:', error);
+            alert('Failed to disconnect. Please try again.');
         } finally {
             setLoading(false);
         }

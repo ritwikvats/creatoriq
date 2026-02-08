@@ -1,16 +1,19 @@
 import { Router } from 'express';
 import * as instagramService from '../services/instagram.service';
 import { saveConnectedPlatform, saveAnalyticsSnapshot } from '../services/supabase.service';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Get Instagram OAuth URL
-router.get('/auth', (req, res) => {
+// Get Instagram OAuth URL (requires authentication to get user ID)
+router.get('/auth', requireAuth, (req, res, next) => {
     try {
-        const authUrl = instagramService.getAuthUrl();
+        const userId = req.user!.id;
+        const authUrl = instagramService.getAuthUrl(userId);
         res.json({ authUrl });
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        console.error('Instagram auth error:', error);
+        next(error);
     }
 });
 
@@ -33,14 +36,11 @@ router.get('/callback', async (req, res) => {
             throw new Error('No Instagram Business Account found');
         }
 
-        // Get user ID from state
-        let userId = state as string || req.query.userId as string;
+        // Get user ID from state parameter (passed through OAuth flow)
+        const userId = state as string || req.query.userId as string;
 
         if (!userId) {
-            // For testing: use a valid UUID format
-            // TODO: Remove this in production - require proper authentication
-            userId = '00000000-0000-0000-0000-000000000001';
-            console.log('⚠️ No userId provided, using test UUID:', userId);
+            throw new Error('No user ID provided in OAuth state');
         }
 
         // Get account insights
@@ -96,8 +96,8 @@ router.get('/callback', async (req, res) => {
 });
 
 // Check Instagram connection status
-router.get('/status/:userId', async (req, res) => {
-    let { userId } = req.params;
+router.get('/status', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
 
     try {
         let platform;
@@ -106,16 +106,6 @@ router.get('/status/:userId', async (req, res) => {
             platform = await require('../services/supabase.service').getConnectedPlatform(userId, 'instagram');
         } catch (err) {
             platform = null;
-        }
-
-        // Fallback to test user for testing
-        if (!platform && userId !== '00000000-0000-0000-0000-000000000001') {
-            console.log('⚠️ No Instagram connection for user, checking test user...');
-            try {
-                platform = await require('../services/supabase.service').getConnectedPlatform('00000000-0000-0000-0000-000000000001', 'instagram');
-            } catch (err) {
-                platform = null;
-            }
         }
 
         if (!platform) {
@@ -149,18 +139,23 @@ router.get('/status/:userId', async (req, res) => {
 });
 
 // Get Instagram analytics for a user
-router.get('/analytics/:userId', async (req, res) => {
-    const { userId } = req.params;
+router.get('/analytics', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
 
     try {
         // Get connected platform
-        const platform = await require('../services/supabase.service').getConnectedPlatform(userId, 'instagram');
+        let platform;
+        try {
+            platform = await require('../services/supabase.service').getConnectedPlatform(userId, 'instagram');
+        } catch (err) {
+            platform = null;
+        }
 
         if (!platform) {
             return res.status(404).json({ error: 'Instagram not connected' });
         }
 
-        // Fetch latest analytics
+        // Fetch latest analytics with ALL data
         const { account, insights } = await instagramService.getAccountInsights(
             platform.access_token,
             platform.platform_user_id
@@ -169,17 +164,176 @@ router.get('/analytics/:userId', async (req, res) => {
         const media = await instagramService.getMediaPerformance(
             platform.access_token,
             platform.platform_user_id,
-            10
+            20  // Get more posts
         );
 
+        // Calculate engagement metrics
+        const totalEngagement = media.reduce((sum: number, post: any) =>
+            sum + (post.like_count || 0) + (post.comments_count || 0), 0
+        );
+        const avgEngagement = media.length > 0 ? totalEngagement / media.length : 0;
+        const engagementRate = account.followers_count > 0
+            ? ((avgEngagement / account.followers_count) * 100).toFixed(2)
+            : '0.00';
+
+        // Get top performing posts
+        const topPosts = [...media]
+            .sort((a: any, b: any) =>
+                ((b.like_count || 0) + (b.comments_count || 0)) -
+                ((a.like_count || 0) + (a.comments_count || 0))
+            )
+            .slice(0, 5);
+
         res.json({
-            account,
+            account: {
+                ...account,
+                engagement_rate: parseFloat(engagementRate),
+                avg_likes: media.length > 0 ? media.reduce((sum: number, p: any) => sum + (p.like_count || 0), 0) / media.length : 0,
+                avg_comments: media.length > 0 ? media.reduce((sum: number, p: any) => sum + (p.comments_count || 0), 0) / media.length : 0,
+            },
             insights,
             recentMedia: media,
+            topPosts,
+            stats: {
+                total_posts: media.length,
+                total_engagement: totalEngagement,
+                avg_engagement_per_post: avgEngagement,
+                engagement_rate: parseFloat(engagementRate),
+            }
         });
     } catch (error: any) {
         console.error('Instagram analytics error:', error);
-        res.status(500).json({ error: error.message });
+        next(error);
+    }
+});
+
+// Disconnect Instagram account
+router.post('/disconnect', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
+
+    try {
+        const supabase = require('../services/supabase.service').getSupabaseClient();
+
+        const { error } = await supabase
+            .from('connected_platforms')
+            .delete()
+            .eq('user_id', userId)
+            .eq('platform', 'instagram');
+
+        if (error) {
+            throw new Error(`Failed to disconnect: ${error.message}`);
+        }
+
+        res.json({ success: true, message: 'Instagram disconnected' });
+    } catch (error: any) {
+        console.error('Instagram disconnect error:', error);
+        next(error);
+    }
+});
+
+// Diagnostic endpoint to check Instagram connection and permissions
+router.get('/debug', requireAuth, async (req, res, next) => {
+    const userId = req.user!.id;
+
+    try {
+        // Get connected platform
+        const platform = await require('../services/supabase.service').getConnectedPlatform(userId, 'instagram');
+
+        if (!platform) {
+            return res.json({
+                connected: false,
+                message: 'Instagram not connected. Please connect your account first.'
+            });
+        }
+
+        // Test the access token by fetching account info
+        const axios = require('axios');
+        const INSTAGRAM_API_BASE = 'https://graph.facebook.com/v22.0';
+
+        // 1. Get account info
+        const accountInfo = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}`, {
+            params: {
+                fields: 'username,name,followers_count,media_count,biography',
+                access_token: platform.access_token,
+            }
+        });
+
+        // 2. Check if we can get Facebook pages
+        let facebookPages = [];
+        try {
+            const pagesResponse = await axios.get(`${INSTAGRAM_API_BASE}/me/accounts`, {
+                params: {
+                    fields: 'id,name,instagram_business_account',
+                    access_token: platform.access_token,
+                }
+            });
+            facebookPages = pagesResponse.data.data || [];
+        } catch (err: any) {
+            facebookPages = [{ error: err.response?.data || err.message }];
+        }
+
+        // 3. Try to fetch demographics (this will show if permissions are missing)
+        let demographicsTest = { success: false, error: '', data: null };
+        try {
+            const demoResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+                params: {
+                    metric: 'audience_city,audience_country,audience_gender_age',
+                    period: 'lifetime',
+                    access_token: platform.access_token,
+                }
+            });
+            demographicsTest = { success: true, error: '', data: demoResponse.data };
+        } catch (err: any) {
+            demographicsTest = {
+                success: false,
+                error: err.response?.data?.error?.message || err.message,
+                data: err.response?.data || null
+            };
+        }
+
+        // 4. Try online_followers for posting times
+        let postingTimesTest = { success: false, error: '', data: null };
+        try {
+            const onlineResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+                params: {
+                    metric: 'online_followers',
+                    period: 'lifetime',
+                    access_token: platform.access_token,
+                }
+            });
+            postingTimesTest = { success: true, error: '', data: onlineResponse.data };
+        } catch (err: any) {
+            postingTimesTest = {
+                success: false,
+                error: err.response?.data?.error?.message || err.message,
+                data: err.response?.data || null
+            };
+        }
+
+        res.json({
+            connected: true,
+            platform_info: {
+                username: platform.platform_username,
+                account_id: platform.platform_user_id,
+            },
+            account_info: accountInfo.data,
+            facebook_pages: facebookPages,
+            diagnostics: {
+                demographics: demographicsTest,
+                posting_times: postingTimesTest,
+            },
+            recommendations: [
+                demographicsTest.success ? '✅ Demographics API working!' : '❌ Demographics not available - check if account is Business and linked to Facebook Page',
+                postingTimesTest.success ? '✅ Posting times API working!' : '❌ Posting times not available',
+                facebookPages.length > 0 ? `✅ Found ${facebookPages.length} Facebook Page(s)` : '❌ No Facebook Pages found - you need to create and link a Facebook Page'
+            ]
+        });
+    } catch (error: any) {
+        console.error('Instagram debug error:', error);
+        res.status(500).json({
+            error: error.message,
+            details: error.response?.data || null
+        });
     }
 });
 

@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import GrowthStats from '@/components/GrowthStats';
+import { Download } from 'lucide-react';
+import { exportAsCSV, exportAsJSON, exportAsPDF, formatDataForExport } from '@/lib/export-utils';
 
 interface PlatformStats {
     youtube: {
@@ -53,8 +56,8 @@ export default function AnalyticsPage() {
                 instagram: {
                     connected: igData.connected,
                     username: igData.username,
-                    followers: 0, // API doesn't return this in status
-                    posts: 0,
+                    followers: igData.followers || 0,
+                    posts: igData.posts || 0,
                 },
             });
         } catch (err) {
@@ -203,9 +206,12 @@ export default function AnalyticsPage() {
                                     <p className="text-2xl font-bold text-purple-600">{stats.instagram.posts?.toLocaleString() || 'N/A'}</p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-500 bg-yellow-50 border border-yellow-200 rounded p-3 mt-4">
-                                💡 Full Instagram analytics coming soon
-                            </p>
+                            <a
+                                href="/dashboard/instagram"
+                                className="block text-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-pink-700 mt-4"
+                            >
+                                View Detailed Analytics
+                            </a>
                         </div>
                     ) : (
                         <div className="text-center py-8">
@@ -213,6 +219,58 @@ export default function AnalyticsPage() {
                             <a href="/dashboard" className="text-purple-600 hover:underline">Connect Instagram</a>
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Growth Statistics */}
+            <div className="mt-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Growth Trends</h2>
+                <GrowthStats userId="00000000-0000-0000-0000-000000000001" />
+            </div>
+
+            {/* Export Section */}
+            <div className="mt-8">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Download className="w-6 h-6" />
+                        Export Analytics
+                    </h2>
+                    <p className="text-gray-600 text-sm mb-4">Download your analytics data in various formats</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={async () => {
+                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const data = await response.json();
+                                const formatted = formatDataForExport('analytics', data.snapshots);
+                                exportAsCSV({ type: 'analytics', data: formatted, filename: 'analytics' });
+                            }}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                        >
+                            Export as CSV
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const data = await response.json();
+                                const formatted = formatDataForExport('analytics', data.snapshots);
+                                exportAsPDF({ type: 'analytics', data: formatted, filename: 'analytics' });
+                            }}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                        >
+                            Export as PDF
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const data = await response.json();
+                                const formatted = formatDataForExport('analytics', data.snapshots);
+                                exportAsJSON({ type: 'analytics', data: formatted, filename: 'analytics' });
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                        >
+                            Export as JSON
+                        </button>
+                    </div>
                 </div>
             </div>
 

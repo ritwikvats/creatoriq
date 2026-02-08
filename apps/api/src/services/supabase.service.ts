@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { encryptionService } from './encryption.service';
 
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -35,9 +36,13 @@ export const getUserById = async (userId: string) => {
 };
 
 export const saveAnalyticsSnapshot = async (snapshot: any) => {
+    // Use upsert to update if snapshot for this date already exists
     const { data, error } = await supabase
         .from('analytics_snapshots')
-        .insert(snapshot)
+        .upsert(snapshot, {
+            onConflict: 'user_id,platform,snapshot_date', // Update if combination exists
+            ignoreDuplicates: false, // Update instead of ignoring
+        })
         .select()
         .single();
 
@@ -54,16 +59,39 @@ export const getConnectedPlatform = async (userId: string, platform: 'youtube' |
         .single();
 
     if (error) throw error;
+
+    // Decrypt access token before returning (with backward compatibility)
+    if (data && data.access_token) {
+        try {
+            data.access_token = encryptionService.safeDecrypt(data.access_token);
+        } catch (decryptError) {
+            console.error('Failed to decrypt access token:', decryptError);
+            throw new Error('Failed to decrypt access token');
+        }
+    }
+
     return data;
 };
 
 export const saveConnectedPlatform = async (platformData: any) => {
+    // Encrypt access token before saving
+    const dataToSave = { ...platformData };
+    if (dataToSave.access_token) {
+        dataToSave.access_token = encryptionService.encrypt(dataToSave.access_token);
+    }
+
     const { data, error } = await supabase
         .from('connected_platforms')
-        .upsert(platformData)
+        .upsert(dataToSave)
         .select()
         .single();
 
     if (error) throw error;
+
+    // Decrypt access token in the returned data (with backward compatibility)
+    if (data && data.access_token) {
+        data.access_token = encryptionService.safeDecrypt(data.access_token);
+    }
+
     return data;
 };
