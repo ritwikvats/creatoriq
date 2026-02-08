@@ -40,7 +40,6 @@ class YouTubeService {
             access_type: 'offline', // Get refresh token
             scope: scopes,
             prompt: 'consent', // Force consent screen
-            redirect_uri: 'http://localhost:3001/youtube/callback', // Hardcoded redirect_uri
         });
     }
 
@@ -50,10 +49,7 @@ class YouTubeService {
     async exchangeCodeForTokens(code: string) {
         try {
             console.log('🔄 Exchanging code for tokens...');
-            const { tokens } = await this.getOAuthClient().getToken({
-                code,
-                redirect_uri: 'http://localhost:3001/youtube/callback'
-            });
+            const { tokens } = await this.getOAuthClient().getToken(code);
             this.getOAuthClient().setCredentials(tokens);
             console.log('✅ Token exchange successful');
             return tokens;

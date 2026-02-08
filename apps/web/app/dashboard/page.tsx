@@ -9,7 +9,7 @@ import AnalyticsCharts from '@/components/AnalyticsCharts';
 import AIInsights from '@/components/AIInsights';
 import ConnectYouTube from '@/components/ConnectYouTube';
 import ConnectInstagram from '@/components/ConnectInstagram';
-import { mockYouTubeData, mockAnalyticsTimeline } from '@/lib/mockData';
+// Removed mock data imports - using real data only
 import { Youtube, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -66,20 +66,25 @@ export default function DashboardPage() {
     }, [user, youtubeConnected]);
 
     const fetchYouTubeData = async () => {
-        if (!user?.id) return;
+        // Use test UUID for now since proper auth isn't implemented
+        const userId = user?.id || '00000000-0000-0000-0000-000000000001';
 
         setFetchingYouTube(true);
         try {
             const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/youtube/stats/${user.id}`);
+            const response = await fetch(`${api_url}/youtube/stats/${userId}`);
             const data = await response.json();
 
             if (data.connected && data.channel) {
                 setYoutubeData(data);
                 setYoutubeConnected(true);
+            } else {
+                // No data - set empty state
+                setYoutubeData(null);
             }
         } catch (error) {
             console.error('Failed to fetch YouTube data:', error);
+            setYoutubeData(null);
         } finally {
             setFetchingYouTube(false);
         }
@@ -149,7 +154,12 @@ export default function DashboardPage() {
                                 totalViews: youtubeData.channel.totalViews,
                                 monthlyRevenue: youtubeData.revenue || 0,
                                 engagementRate: youtubeData.analytics?.avgEngagementRate ?? 0,
-                            } : mockYouTubeData.stats}
+                            } : {
+                                subscribers: 0,
+                                totalViews: 0,
+                                monthlyRevenue: 0,
+                                engagementRate: 0
+                            }}
                         />
 
                         {/* Main Chart */}
@@ -162,7 +172,7 @@ export default function DashboardPage() {
                                     <option>This Month</option>
                                 </select>
                             </div>
-                            <AnalyticsCharts timelineData={mockAnalyticsTimeline} />
+                            <AnalyticsCharts timelineData={[]} />
                         </div>
                     </div>
 
@@ -174,13 +184,18 @@ export default function DashboardPage() {
                             views: youtubeData.channel.totalViews,
                             engagement: youtubeData.analytics?.avgEngagementRate ?? 0,
                             revenue: youtubeData.revenue || 0
-                        } : mockYouTubeData.stats} />
+                        } : {
+                            subscribers: 0,
+                            views: 0,
+                            engagement: 0,
+                            revenue: 0
+                        }} />
 
                         {/* Recent Videos List */}
                         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
                             <h2 className="text-xl font-bold text-dark-800 mb-6">Recent Videos</h2>
                             <div className="space-y-4">
-                                {(youtubeData?.videos || mockYouTubeData.recentVideos).slice(0, 3).map((video: any) => (
+                                {(youtubeData?.recentVideos || []).slice(0, 3).map((video: any) => (
                                     <div key={video.id} className="flex gap-4 group cursor-pointer">
                                         <div className="w-24 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             <img

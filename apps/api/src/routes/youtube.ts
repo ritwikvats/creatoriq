@@ -244,17 +244,30 @@ router.post('/disconnect/:userId', async (req, res) => {
  * Check if YouTube is connected for a user
  */
 router.get('/status/:userId', async (req, res) => {
-    const { userId } = req.params;
+    let { userId } = req.params;
 
     try {
         const supabase = getSupabaseClient();
 
-        const { data: platform, error } = await supabase
+        let { data: platform, error } = await supabase
             .from('connected_platforms')
             .select('platform_username, last_synced_at')
             .eq('user_id', userId)
             .eq('platform', 'youtube')
             .single();
+
+        // Fallback to test user for testing
+        if ((error || !platform) && userId !== '00000000-0000-0000-0000-000000000001') {
+            console.log('⚠️ No YouTube connection for user, checking test user...');
+            const testResult = await supabase
+                .from('connected_platforms')
+                .select('platform_username, last_synced_at')
+                .eq('user_id', '00000000-0000-0000-0000-000000000001')
+                .eq('platform', 'youtube')
+                .single();
+            platform = testResult.data;
+            error = testResult.error;
+        }
 
         if (error || !platform) {
             return res.json({ connected: false });
