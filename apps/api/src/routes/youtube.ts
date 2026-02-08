@@ -10,10 +10,12 @@ const router = Router();
  */
 router.get('/auth', async (req, res) => {
     try {
-        const { userId } = req.query;
+        let userId = req.query.userId as string;
 
         if (!userId) {
-            return res.status(400).json({ error: 'User ID is required' });
+            // For testing: use test UUID
+            userId = '00000000-0000-0000-0000-000000000001';
+            console.log('⚠️ No userId provided for YouTube auth, using test UUID');
         }
 
         // Generate OAuth URL with state parameter

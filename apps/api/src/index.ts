@@ -1,10 +1,20 @@
-import express from 'express';
-import cors from 'cors';
+// CRITICAL: Load .env FIRST before any other imports!
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env from apps/api directory first (where this package runs)
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Try loading from both locations
+const rootEnvPath = path.resolve(__dirname, '../../../.env');
+const apiEnvPath = path.resolve(__dirname, '../.env');
+
+console.log('📁 Loading .env from root:', rootEnvPath);
+dotenv.config({ path: rootEnvPath });
+console.log('📁 Loading .env from api:', apiEnvPath);
+dotenv.config({ path: apiEnvPath });
+console.log('✅ Env loaded - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'MISSING');
+
+// Now import everything else AFTER env is loaded
+import express from 'express';
+import cors from 'cors';
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;

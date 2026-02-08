@@ -2,21 +2,27 @@ import { google } from 'googleapis';
 
 // YouTube OAuth and API service with comprehensive functionality
 class YouTubeService {
-    private oauth2Client;
+    private oauth2Client: any = null;
 
-    constructor() {
-        // Use environment variables for credentials
-        const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-        const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-        const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+    // Lazy initialization - create oauth client when first needed
+    private getOAuthClient() {
+        if (!this.oauth2Client) {
+            const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+            const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+            const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
-        console.log('🔍 YouTube Service: Initialized with environment credentials');
+            console.log('🔍 YouTube Service: Initializing OAuth client');
+            console.log('   CLIENT_ID:', GOOGLE_CLIENT_ID ? `${GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'MISSING!');
+            console.log('   CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? 'SET' : 'MISSING!');
+            console.log('   REDIRECT_URI:', GOOGLE_REDIRECT_URI);
 
-        this.oauth2Client = new google.auth.OAuth2(
-            GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET,
-            GOOGLE_REDIRECT_URI
-        );
+            this.oauth2Client = new google.auth.OAuth2(
+                GOOGLE_CLIENT_ID,
+                GOOGLE_CLIENT_SECRET,
+                GOOGLE_REDIRECT_URI
+            );
+        }
+        return this.oauth2Client;
     }
 
     /**
@@ -30,7 +36,7 @@ class YouTubeService {
             'https://www.googleapis.com/auth/yt-analytics-monetary.readonly', // Added for revenue
         ];
 
-        return this.oauth2Client.generateAuthUrl({
+        return this.getOAuthClient().generateAuthUrl({
             access_type: 'offline', // Get refresh token
             scope: scopes,
             prompt: 'consent', // Force consent screen
@@ -44,11 +50,11 @@ class YouTubeService {
     async exchangeCodeForTokens(code: string) {
         try {
             console.log('🔄 Exchanging code for tokens...');
-            const { tokens } = await this.oauth2Client.getToken({
+            const { tokens } = await this.getOAuthClient().getToken({
                 code,
                 redirect_uri: 'http://localhost:3001/youtube/callback'
             });
-            this.oauth2Client.setCredentials(tokens);
+            this.getOAuthClient().setCredentials(tokens);
             console.log('✅ Token exchange successful');
             return tokens;
         } catch (error: any) {
@@ -65,8 +71,8 @@ class YouTubeService {
      */
     async refreshAccessToken(refreshToken: string) {
         try {
-            this.oauth2Client.setCredentials({ refresh_token: refreshToken });
-            const { credentials } = await this.oauth2Client.refreshAccessToken();
+            this.getOAuthClient().setCredentials({ refresh_token: refreshToken });
+            const { credentials } = await this.getOAuthClient().refreshAccessToken();
             return credentials;
         } catch (error: any) {
             console.error('Error refreshing access token:', error);
@@ -79,8 +85,8 @@ class YouTubeService {
      */
     async getUserInfo(accessToken: string) {
         try {
-            this.oauth2Client.setCredentials({ access_token: accessToken });
-            const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const oauth2 = google.oauth2({ version: 'v2', auth: this.getOAuthClient() });
             const userInfo = await oauth2.userinfo.get();
 
             return {
@@ -99,8 +105,8 @@ class YouTubeService {
      */
     async getChannelStats(accessToken: string) {
         try {
-            this.oauth2Client.setCredentials({ access_token: accessToken });
-            const youtube = google.youtube({ version: 'v3', auth: this.oauth2Client });
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const youtube = google.youtube({ version: 'v3', auth: this.getOAuthClient() });
 
             const channelsResponse = await youtube.channels.list({
                 part: ['snippet', 'statistics', 'contentDetails'],
@@ -138,8 +144,8 @@ class YouTubeService {
      */
     async getRecentVideos(accessToken: string, channelId: string, maxResults: number = 10) {
         try {
-            this.oauth2Client.setCredentials({ access_token: accessToken });
-            const youtube = google.youtube({ version: 'v3', auth: this.oauth2Client });
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const youtube = google.youtube({ version: 'v3', auth: this.getOAuthClient() });
 
             // Search for recent uploads
             const searchResponse = await youtube.search.list({
@@ -207,8 +213,8 @@ class YouTubeService {
      */
     async getChannelRevenue(accessToken: string, channelId: string) {
         try {
-            this.oauth2Client.setCredentials({ access_token: accessToken });
-            const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: this.oauth2Client });
+            this.getOAuthClient().setCredentials({ access_token: accessToken });
+            const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: this.getOAuthClient() });
 
             // Calculate start and end date (last 30 days)
             const endDate = new Date();
