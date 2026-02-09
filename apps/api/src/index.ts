@@ -113,6 +113,13 @@ app.get('/', (req, res) => {
     });
 });
 
+// Import rate limiters
+import { generalLimiter, authLimiter, aiLimiter, platformConnectLimiter } from './middleware/rate-limit';
+
+// Import error handlers
+import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { apiLogger } from './services/logger.service';
+
 // Import routes
 import youtubeRoutes from './routes/youtube';
 import instagramRoutes from './routes/instagram';
@@ -146,13 +153,6 @@ app.use('/analytics', analyticsRoutes);
 app.use('/audience', audienceRoutes);
 app.use('/test-sentry', testSentryRoutes);
 app.use('/status', statusRoutes);
-
-// Import rate limiters
-import { generalLimiter, authLimiter, aiLimiter, platformConnectLimiter } from './middleware/rate-limit';
-
-// Import error handlers
-import { errorHandler, notFoundHandler } from './middleware/error-handler';
-import { apiLogger } from './services/logger.service';
 
 // Sentry error handler (must be BEFORE other error handlers)
 app.use(Sentry.expressErrorHandler());

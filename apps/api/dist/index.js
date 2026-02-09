@@ -140,6 +140,11 @@ app.get('/', (req, res) => {
         },
     });
 });
+// Import rate limiters
+const rate_limit_1 = require("./middleware/rate-limit");
+// Import error handlers
+const error_handler_1 = require("./middleware/error-handler");
+const logger_service_1 = require("./services/logger.service");
 // Import routes
 const youtube_1 = __importDefault(require("./routes/youtube"));
 const instagram_1 = __importDefault(require("./routes/instagram"));
@@ -170,11 +175,6 @@ app.use('/analytics', analytics_1.default);
 app.use('/audience', audience_1.default);
 app.use('/test-sentry', test_sentry_1.default);
 app.use('/status', status_1.default);
-// Import rate limiters
-const rate_limit_1 = require("./middleware/rate-limit");
-// Import error handlers
-const error_handler_1 = require("./middleware/error-handler");
-const logger_service_1 = require("./services/logger.service");
 // Sentry error handler (must be BEFORE other error handlers)
 app.use(Sentry.expressErrorHandler());
 // 404 handler (must be after all routes)
