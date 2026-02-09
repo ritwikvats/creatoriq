@@ -1,0 +1,20 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/content/page": "app/dashboard/content/page.js",
+  "/dashboard/deals/page": "app/dashboard/deals/page.js",
+  "/dashboard/analytics/page": "app/dashboard/analytics/page.js",
+  "/dashboard/revenue/page": "app/dashboard/revenue/page.js",
+  "/dashboard/audience/page": "app/dashboard/audience/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/dashboard/youtube/page": "app/dashboard/youtube/page.js",
+  "/dashboard/tax-calculator/page": "app/dashboard/tax-calculator/page.js",
+  "/dashboard/instagram/page": "app/dashboard/instagram/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/deals/page": "app/deals/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/signup/page": "app/signup/page.js",
+  "/dashboard/tax/page": "app/dashboard/tax/page.js",
+  "/terms/page": "app/terms/page.js"
+}

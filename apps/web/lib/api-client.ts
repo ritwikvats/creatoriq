@@ -24,9 +24,9 @@ export async function apiRequest<T = any>(
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const url = `${apiUrl}${endpoint}`;
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...(options.headers || {}),
+        ...(options.headers as Record<string, string> || {}),
     };
 
     // Add Authorization header if token exists

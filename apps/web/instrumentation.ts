@@ -17,7 +17,7 @@ export async function register() {
         }
 
         // Remove sensitive query params
-        if (event.request?.query_string) {
+        if (event.request?.query_string && typeof event.request.query_string === 'string') {
           event.request.query_string = event.request.query_string
             .replace(/token=[^&]*/g, 'token=REDACTED')
             .replace(/key=[^&]*/g, 'key=REDACTED');

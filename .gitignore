@@ -8,6 +8,8 @@ coverage/
 
 # Next.js
 .next/
+!apps/web/.next/standalone/
+!apps/web/.next/static/
 out/
 build/
 dist/

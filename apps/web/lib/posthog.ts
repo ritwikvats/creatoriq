@@ -10,9 +10,8 @@ export function initPostHog() {
         capture_pageview: true,
         capture_pageleave: true,
         session_recording: {
-          enabled: true,
           recordCrossOriginIframes: false,
-        },
+        } as any,
         loaded: (posthog) => {
           if (process.env.NODE_ENV === 'development') {
             posthog.debug();

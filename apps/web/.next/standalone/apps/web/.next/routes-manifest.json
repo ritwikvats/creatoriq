@@ -1,0 +1,149 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/dashboard/analytics",
+      "regex": "^/dashboard/analytics(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/analytics(?:/)?$"
+    },
+    {
+      "page": "/dashboard/audience",
+      "regex": "^/dashboard/audience(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/audience(?:/)?$"
+    },
+    {
+      "page": "/dashboard/content",
+      "regex": "^/dashboard/content(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/content(?:/)?$"
+    },
+    {
+      "page": "/dashboard/deals",
+      "regex": "^/dashboard/deals(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/deals(?:/)?$"
+    },
+    {
+      "page": "/dashboard/instagram",
+      "regex": "^/dashboard/instagram(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/instagram(?:/)?$"
+    },
+    {
+      "page": "/dashboard/revenue",
+      "regex": "^/dashboard/revenue(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/revenue(?:/)?$"
+    },
+    {
+      "page": "/dashboard/settings",
+      "regex": "^/dashboard/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/settings(?:/)?$"
+    },
+    {
+      "page": "/dashboard/tax",
+      "regex": "^/dashboard/tax(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/tax(?:/)?$"
+    },
+    {
+      "page": "/dashboard/tax-calculator",
+      "regex": "^/dashboard/tax\\-calculator(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/tax\\-calculator(?:/)?$"
+    },
+    {
+      "page": "/dashboard/youtube",
+      "regex": "^/dashboard/youtube(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/youtube(?:/)?$"
+    },
+    {
+      "page": "/deals",
+      "regex": "^/deals(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/deals(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/signup",
+      "regex": "^/signup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/signup(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

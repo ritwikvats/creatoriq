@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { PostHogProvider } from '../providers/posthog-provider';
@@ -20,9 +21,11 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <PostHogProvider>
-                    {children}
-                </PostHogProvider>
+                <Suspense fallback={null}>
+                    <PostHogProvider>
+                        {children}
+                    </PostHogProvider>
+                </Suspense>
                 <GoogleAnalytics gaId="G-XXXXXXXXXX" />
             </body>
         </html>
