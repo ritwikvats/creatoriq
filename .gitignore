@@ -11,6 +11,7 @@ coverage/
 out/
 build/
 dist/
+!apps/api/dist/
 
 # Environment variables
 .env
