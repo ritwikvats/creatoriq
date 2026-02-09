@@ -1,8 +1,31 @@
 'use client';
 
+import Link from 'next/link';
+import { BarChart3 } from 'lucide-react';
+
 export default function PrivacyPolicyPage() {
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="min-h-screen bg-gray-50">
+            {/* Navigation */}
+            <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <Link href="/" className="flex items-center gap-2">
+                            <BarChart3 className="w-8 h-8 text-blue-600" />
+                            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                                CreatorIQ
+                            </span>
+                        </Link>
+                        <div className="flex gap-4 text-sm">
+                            <Link href="/terms" className="text-gray-600 hover:text-gray-900">Terms</Link>
+                            <Link href="/faq" className="text-gray-600 hover:text-gray-900">FAQ</Link>
+                            <Link href="/login" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Login</Link>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div className="py-12 px-4">
             <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-8 md:p-12">
                 <h1 className="text-4xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
                 <p className="text-sm text-gray-600 mb-8">Last updated: February 8, 2026</p>
@@ -117,9 +140,12 @@ export default function PrivacyPolicyPage() {
                     </section>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                    <a href="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</a>
+                <div className="mt-8 pt-8 border-t border-gray-200 flex gap-6">
+                    <Link href="/dashboard" className="text-blue-600 hover:underline">← Back to Dashboard</Link>
+                    <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>
+                    <Link href="/faq" className="text-blue-600 hover:underline">FAQ</Link>
                 </div>
+            </div>
             </div>
         </div>
     );

@@ -21,6 +21,7 @@ dist/
 .env.production
 apps/api/.env
 apps/web/.env.local
+render.env
 
 # Debug
 npm-debug.log*

@@ -129,9 +129,38 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-dark-200 bg-dark-50 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-dark-600">
-                    <p>© 2026 CreatorIQ. Built with conviction 🚀</p>
+            <footer className="border-t border-dark-200 bg-dark-50 py-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <BarChart3 className="w-6 h-6 text-primary-600" />
+                                <span className="text-lg font-bold text-dark-800">CreatorIQ</span>
+                            </div>
+                            <p className="text-dark-500 text-sm">
+                                The unified analytics platform for Indian content creators.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-dark-800 mb-3">Product</h4>
+                            <ul className="space-y-2 text-sm text-dark-600">
+                                <li><Link href="#features" className="hover:text-primary-600">Features</Link></li>
+                                <li><Link href="/signup" className="hover:text-primary-600">Get Started</Link></li>
+                                <li><Link href="/faq" className="hover:text-primary-600">FAQ</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-dark-800 mb-3">Legal</h4>
+                            <ul className="space-y-2 text-sm text-dark-600">
+                                <li><Link href="/privacy" className="hover:text-primary-600">Privacy Policy</Link></li>
+                                <li><Link href="/terms" className="hover:text-primary-600">Terms of Service</Link></li>
+                                <li><a href="mailto:support@creatoriq.com" className="hover:text-primary-600">Contact Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-dark-200 pt-6 text-center text-dark-500 text-sm">
+                        <p>&copy; 2026 CreatorIQ. All rights reserved.</p>
+                    </div>
                 </div>
             </footer>
         </div>
