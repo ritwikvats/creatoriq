@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { IndianRupee, Calendar, Tag, FileText, CheckCircle2 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api-client';
 
 interface RevenueFormProps {
     userId: string | null;
@@ -30,24 +29,13 @@ export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueForm
         setLoading(true);
         setError('');
         try {
-            const response = await fetch(`${API_URL}/revenue`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    user_id: userId,
-                    amount: parseFloat(formData.amount),
-                }),
+            await api.post('/revenue', {
+                ...formData,
+                amount: parseFloat(formData.amount),
             });
-
-            if (response.ok) {
-                onSuccess();
-            } else {
-                const errData = await response.json().catch(() => ({}));
-                setError(errData.error || 'Failed to save revenue entry. Please try again.');
-            }
+            onSuccess();
         } catch (err: any) {
-            setError(err.message || 'Network error. Please check your connection.');
+            setError(err.message || 'Failed to save revenue entry. Please try again.');
         } finally {
             setLoading(false);
         }

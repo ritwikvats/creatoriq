@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { youtubeService } from '../services/youtube.service';
-import { getSupabaseClient } from '../services/supabase.service';
+import { getSupabaseClient, saveConnectedPlatform, saveAnalyticsSnapshot } from '../services/supabase.service';
 import { requireAuth } from '../middleware/auth.middleware';
 import { APIError } from '../middleware/error-handler';
 
@@ -58,7 +58,7 @@ router.get('/callback', async (req, res) => {
         // Get user email
         const userInfo = await youtubeService.getUserInfo(tokens.access_token);
 
-        // Save to Supabase connected_platforms table
+        // Save to Supabase connected_platforms table (with token encryption)
         const supabase = getSupabaseClient();
 
         // 🔍 ENSURE USER EXISTS IN OUR USERS TABLE FIRST
@@ -78,9 +78,9 @@ router.get('/callback', async (req, res) => {
             });
         }
 
-        const { error } = await supabase
-            .from('connected_platforms')
-            .upsert({
+        // Use saveConnectedPlatform which encrypts access tokens before saving
+        try {
+            await saveConnectedPlatform({
                 user_id: userId,
                 platform: 'youtube',
                 platform_user_id: channelStats.channelId,
@@ -89,19 +89,15 @@ router.get('/callback', async (req, res) => {
                 refresh_token: tokens.refresh_token || null,
                 token_expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
                 last_synced_at: new Date().toISOString(),
-            }, {
-                onConflict: 'user_id,platform',
             });
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw new Error(`Database error: ${error.message}`);
+        } catch (saveError: any) {
+            console.error('Supabase error:', saveError);
+            throw new Error(`Database error: ${saveError.message}`);
         }
 
         // Save initial analytics snapshot
-        const { error: snapshotError } = await supabase
-            .from('analytics_snapshots')
-            .insert({
+        try {
+            await saveAnalyticsSnapshot({
                 user_id: userId,
                 platform: 'youtube',
                 snapshot_date: new Date().toISOString().split('T')[0],
@@ -112,9 +108,8 @@ router.get('/callback', async (req, res) => {
                     channelName: channelStats.channelName,
                 },
             });
-
-        if (snapshotError) {
-            console.warn('Failed to save analytics snapshot:', snapshotError);
+        } catch (snapshotError: any) {
+            console.warn('Failed to save analytics snapshot:', snapshotError.message);
             // Don't fail the whole flow if snapshot fails
         }
 

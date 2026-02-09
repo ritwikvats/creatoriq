@@ -5,8 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase';
 import { FileText, Calculator, AlertCircle, CheckCircle, TrendingUp, Download, Loader2, Sparkles } from 'lucide-react';
 import { generateTaxPDF } from '@/lib/pdfUtils';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api-client';
 
 export default function TaxDashboard() {
     const [summary, setSummary] = useState<any>(null);
@@ -20,16 +19,11 @@ export default function TaxDashboard() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 try {
-                    const res = await fetch(`${API_URL}/tax/${user.id}/summary?year=${year}`);
-                    if (!res.ok) {
-                        console.error('Tax API error:', res.status);
-                        setSummary(null);
-                        return;
-                    }
-                    const data = await res.json();
+                    const data = await api.get(`/tax/summary?year=${year}`);
                     setSummary(data);
                 } catch (error) {
                     console.error('Error fetching tax summary:', error);
+                    setSummary(null);
                 } finally {
                     setLoading(false);
                 }

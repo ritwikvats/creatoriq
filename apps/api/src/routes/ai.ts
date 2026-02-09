@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
 import { openClawService } from '../services/openclaw.service';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
  * POST /api/ai/insights
  * Generate AI-powered insights from analytics data
  */
-router.post('/insights', async (req: Request, res: Response) => {
+router.post('/insights', requireAuth, async (req: Request, res: Response) => {
     try {
         const { analytics } = req.body;
 
@@ -36,7 +37,7 @@ router.post('/insights', async (req: Request, res: Response) => {
  * POST /api/ai/categorize-tax
  * Categorize revenue for tax purposes
  */
-router.post('/categorize-tax', async (req: Request, res: Response) => {
+router.post('/categorize-tax', requireAuth, async (req: Request, res: Response) => {
     try {
         const { description, amount } = req.body;
 
@@ -64,7 +65,7 @@ router.post('/categorize-tax', async (req: Request, res: Response) => {
  * POST /api/ai/content-ideas
  * Generate viral content ideas
  */
-router.post('/content-ideas', async (req: Request, res: Response) => {
+router.post('/content-ideas', requireAuth, async (req: Request, res: Response) => {
     try {
         const { niche, recentTopics } = req.body;
 
@@ -92,7 +93,7 @@ router.post('/content-ideas', async (req: Request, res: Response) => {
  * POST /api/ai/analyze-revenue
  * Analyze revenue trends and provide financial advice
  */
-router.post('/analyze-revenue', async (req: Request, res: Response) => {
+router.post('/analyze-revenue', requireAuth, async (req: Request, res: Response) => {
     try {
         const { revenueHistory } = req.body;
 

@@ -7,8 +7,7 @@ import RevenueTable from '@/components/RevenueTable';
 import { DollarSign, TrendingUp, Download, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { downloadAsCSV } from '@/lib/utils';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api-client';
 
 export default function RevenuePage() {
     const [revenue, setRevenue] = useState([]);
@@ -32,20 +31,10 @@ export default function RevenuePage() {
     const fetchData = async (uid: string) => {
         setLoading(true);
         try {
-            const [revRes, sumRes] = await Promise.all([
-                fetch(`${API_URL}/revenue/${uid}`),
-                fetch(`${API_URL}/revenue/${uid}/summary`)
+            const [revData, sumData] = await Promise.all([
+                api.get('/revenue'),
+                api.get('/revenue/summary')
             ]);
-
-            if (!revRes.ok || !sumRes.ok) {
-                console.error('API returned error:', revRes.status, sumRes.status);
-                setRevenue([]);
-                setSummary({ total: 0, bySource: {}, count: 0 });
-                return;
-            }
-
-            const revData = await revRes.json();
-            const sumData = await sumRes.json();
 
             setRevenue(revData.revenue || []);
             setSummary({
@@ -55,6 +44,7 @@ export default function RevenuePage() {
             });
         } catch (error) {
             console.error('Error fetching revenue data:', error);
+            setRevenue([]);
             setSummary({ total: 0, bySource: {}, count: 0 });
         } finally {
             setLoading(false);
@@ -68,8 +58,8 @@ export default function RevenuePage() {
 
     const handleDelete = async (id: string) => {
         try {
-            const res = await fetch(`${API_URL}/revenue/${id}`, { method: 'DELETE' });
-            if (res.ok && userId) {
+            await api.delete(`/revenue/${id}`);
+            if (userId) {
                 fetchData(userId);
             }
         } catch (error) {

@@ -112,13 +112,14 @@ export class RevenueService {
     }
 
     /**
-     * Delete a revenue entry
+     * Delete a revenue entry (with user ownership verification)
      */
-    async deleteRevenue(id: string) {
+    async deleteRevenue(id: string, userId: string) {
         const { error } = await supabase
             .from('revenue_entries')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId); // Ensure user owns this entry
 
         if (error) throw error;
         return true;

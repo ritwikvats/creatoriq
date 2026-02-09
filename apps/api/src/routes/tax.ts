@@ -44,7 +44,7 @@ router.get('/updates', async (req, res) => {
 });
 
 // Calculate tax liability
-router.post('/calculate', (req, res) => {
+router.post('/calculate', requireAuth, (req, res) => {
     try {
         const result = taxCalculatorService.calculateTax(req.body);
         res.json(result);
@@ -55,7 +55,7 @@ router.post('/calculate', (req, res) => {
 });
 
 // Calculate advance tax installments
-router.post('/advance-tax', (req, res) => {
+router.post('/advance-tax', requireAuth, (req, res) => {
     try {
         const { annualTax } = req.body;
         const installments = taxCalculatorService.calculateAdvanceTax(annualTax);
@@ -66,7 +66,7 @@ router.post('/advance-tax', (req, res) => {
 });
 
 // Calculate tax liability for annual income
-router.post('/liability', async (req, res) => {
+router.post('/liability', requireAuth, async (req, res) => {
     const { annualIncome } = req.body;
 
     if (!annualIncome || annualIncome <= 0) {
@@ -82,7 +82,7 @@ router.post('/liability', async (req, res) => {
 });
 
 // Get personalized AI-powered tax advice
-router.post('/advice', async (req, res) => {
+router.post('/advice', requireAuth, async (req, res) => {
     const { annualIncome, revenueBreakdown, expenses } = req.body;
 
     if (!annualIncome) {
@@ -106,8 +106,8 @@ router.post('/advice', async (req, res) => {
     }
 });
 
-// Sync tax rules with latest government updates (called by cron)
-router.post('/sync', async (req, res) => {
+// Sync tax rules with latest government updates (called by cron or admin)
+router.post('/sync', requireAuth, async (req, res) => {
     try {
         await taxUpdatesService.syncTaxRules();
         res.json({

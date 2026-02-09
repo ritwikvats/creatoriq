@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Briefcase, Plus, DollarSign, Calendar, Trash2, Edit2 } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 interface Deal {
     id: string;
@@ -48,17 +49,11 @@ export default function DealsPage() {
     const fetchDeals = async (userId: string) => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/deals/${userId}`);
-            if (!response.ok) {
-                console.error('Deals API error:', response.status);
-                setDeals([]);
-                return;
-            }
-            const data = await response.json();
+            const data = await api.get('/deals');
             setDeals(Array.isArray(data) ? data : data?.deals || []);
         } catch (error) {
             console.error('Failed to fetch deals:', error);
+            setDeals([]);
         } finally {
             setLoading(false);
         }
@@ -69,22 +64,13 @@ export default function DealsPage() {
         if (!user) return;
 
         try {
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/deals`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: user.id,
-                    ...formData,
-                    amount: formData.amount ? parseFloat(formData.amount) : null,
-                }),
+            await api.post('/deals', {
+                ...formData,
+                amount: formData.amount ? parseFloat(formData.amount) : null,
             });
-
-            if (response.ok) {
-                setShowAddForm(false);
-                setFormData({ brand_name: '', amount: '', contact_email: '', notes: '' });
-                fetchDeals(user.id);
-            }
+            setShowAddForm(false);
+            setFormData({ brand_name: '', amount: '', contact_email: '', notes: '' });
+            fetchDeals(user.id);
         } catch (error) {
             console.error('Failed to add deal:', error);
         }
@@ -92,13 +78,7 @@ export default function DealsPage() {
 
     const handleStatusChange = async (dealId: string, newStatus: Deal['status']) => {
         try {
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            await fetch(`${api_url}/deals/${dealId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
-
+            await api.patch(`/deals/${dealId}`, { status: newStatus });
             if (user) {
                 fetchDeals(user.id);
             }
@@ -111,11 +91,7 @@ export default function DealsPage() {
         if (!confirm('Are you sure you want to delete this deal?')) return;
 
         try {
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            await fetch(`${api_url}/deals/${dealId}`, {
-                method: 'DELETE',
-            });
-
+            await api.delete(`/deals/${dealId}`);
             if (user) {
                 fetchDeals(user.id);
             }

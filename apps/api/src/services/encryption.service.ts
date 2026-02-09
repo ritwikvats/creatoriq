@@ -17,14 +17,15 @@ export class EncryptionService {
     constructor() {
         // Get encryption key from environment variable
         const key = process.env.ENCRYPTION_KEY;
+        const salt = process.env.ENCRYPTION_SALT || 'creatoriq-platform-salt-v1';
 
         if (!key) {
             console.warn('⚠️ ENCRYPTION_KEY not set in environment. Using fallback (NOT SECURE FOR PRODUCTION)');
             // Fallback for development - MUST be replaced in production
-            this.encryptionKey = crypto.scryptSync('creatoriq-dev-key', 'salt', KEY_LENGTH);
+            this.encryptionKey = crypto.scryptSync('creatoriq-dev-key', salt, KEY_LENGTH);
         } else {
-            // Derive key from environment variable
-            this.encryptionKey = crypto.scryptSync(key, 'salt', KEY_LENGTH);
+            // Derive key from environment variable with proper salt
+            this.encryptionKey = crypto.scryptSync(key, salt, KEY_LENGTH);
         }
     }
 

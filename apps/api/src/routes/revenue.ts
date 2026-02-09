@@ -52,13 +52,13 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     }
 });
 
-// Delete revenue entry
+// Delete revenue entry (with ownership check)
 router.delete('/:id', requireAuth, async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user!.id;
 
     try {
-        await revenueService.deleteRevenue(id);
+        await revenueService.deleteRevenue(id, userId);
         res.json({ message: 'Revenue entry deleted successfully' });
     } catch (error: any) {
         console.error('Delete revenue error:', error);

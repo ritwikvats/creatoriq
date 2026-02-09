@@ -272,17 +272,36 @@ router.get('/debug', requireAuth, async (req, res, next) => {
             facebookPages = [{ error: err.response?.data || err.message }];
         }
 
-        // 3. Try to fetch demographics (this will show if permissions are missing)
-        let demographicsTest = { success: false, error: '', data: null };
+        // 3. Try to fetch demographics using v22.0 API (follower_demographics with breakdowns)
+        let demographicsTest = { success: false, error: '', data: null as any };
         try {
-            const demoResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+            // v22.0 requires separate calls per breakdown
+            const countryResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
                 params: {
-                    metric: 'audience_city,audience_country,audience_gender_age',
+                    metric: 'follower_demographics',
                     period: 'lifetime',
+                    breakdown: 'country',
+                    metric_type: 'total_value',
                     access_token: platform.access_token,
                 }
             });
-            demographicsTest = { success: true, error: '', data: demoResponse.data };
+            const ageGenderResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+                params: {
+                    metric: 'follower_demographics',
+                    period: 'lifetime',
+                    breakdown: 'age,gender',
+                    metric_type: 'total_value',
+                    access_token: platform.access_token,
+                }
+            });
+            demographicsTest = {
+                success: true,
+                error: '',
+                data: {
+                    country: countryResponse.data,
+                    ageGender: ageGenderResponse.data,
+                }
+            };
         } catch (err: any) {
             demographicsTest = {
                 success: false,

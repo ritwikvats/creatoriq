@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { api } from '@/lib/api-client';
 
 interface YouTubeStats {
     connected: boolean;
@@ -30,12 +31,7 @@ export default function YouTubePage() {
     const fetchYouTubeStats = async () => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const res = await fetch(`${api_url}/youtube/stats`);
-            if (!res.ok) {
-                throw new Error(`API error: ${res.status}`);
-            }
-            const data = await res.json();
+            const data = await api.get('/youtube/stats');
             setStats(data);
         } catch (err: any) {
             setError(err.message);

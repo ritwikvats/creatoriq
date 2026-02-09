@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Instagram, TrendingUp, Heart, MessageCircle, ArrowLeft } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 export default function InstagramAnalyticsPage() {
     const [user, setUser] = useState<any>(null);
@@ -29,16 +30,7 @@ export default function InstagramAnalyticsPage() {
     const fetchInstagramAnalytics = async (userId: string) => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/instagram/analytics/${userId}`);
-            if (!response.ok) {
-                console.error('Instagram API error:', response.status);
-                setAnalytics(null);
-                return;
-            }
-            const data = await response.json();
-
-            console.log('Instagram analytics response:', data);
+            const data = await api.get('/instagram/analytics');
 
             if (data.account) {
                 setAnalytics(data);
