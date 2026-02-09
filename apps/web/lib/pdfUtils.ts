@@ -11,6 +11,11 @@ declare module 'jspdf' {
  * Generates a professional PDF tax report for Indian Creators
  */
 export const generateTaxPDF = (summary: any, revenueEntries: any[]) => {
+    if (!summary) {
+        alert('No tax data available to generate report.');
+        return;
+    }
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -21,7 +26,7 @@ export const generateTaxPDF = (summary: any, revenueEntries: any[]) => {
 
     doc.setFontSize(12);
     doc.setTextColor(100);
-    doc.text(`Financial Year: ${summary.financialYear}`, 14, 32);
+    doc.text(`Financial Year: ${summary.financialYear || 'N/A'}`, 14, 32);
     doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, 38);
 
     // Summary Cards
@@ -37,20 +42,20 @@ export const generateTaxPDF = (summary: any, revenueEntries: any[]) => {
 
     doc.setFontSize(14);
     doc.setTextColor(30);
-    doc.text(`INR ${summary.totalIncome.toLocaleString()}`, 20, 75);
-    doc.text(`INR ${summary.totalGst.toLocaleString()}`, 70, 75);
-    doc.text(`INR ${summary.totalTds.toLocaleString()}`, 120, 75);
-    doc.text(`INR ${summary.netIncome.toLocaleString()}`, 170, 75);
+    doc.text(`INR ${(summary.totalIncome || 0).toLocaleString()}`, 20, 75);
+    doc.text(`INR ${(summary.totalGst || 0).toLocaleString()}`, 70, 75);
+    doc.text(`INR ${(summary.totalTds || 0).toLocaleString()}`, 120, 75);
+    doc.text(`INR ${(summary.netIncome || 0).toLocaleString()}`, 170, 75);
 
     // Revenue Table
     doc.setFontSize(16);
     doc.text('Revenue Breakdown', 14, 110);
 
-    const tableData = revenueEntries.map(entry => [
-        new Date(entry.date).toLocaleDateString(),
-        entry.source.replace('_', ' ').toUpperCase(),
-        entry.platform.toUpperCase(),
-        `INR ${parseFloat(entry.amount).toLocaleString()}`,
+    const tableData = (revenueEntries || []).map(entry => [
+        entry.date ? new Date(entry.date).toLocaleDateString() : 'N/A',
+        (entry.source || 'unknown').replace('_', ' ').toUpperCase(),
+        (entry.platform || 'unknown').toUpperCase(),
+        `INR ${parseFloat(entry.amount || 0).toLocaleString()}`,
         `INR ${parseFloat(entry.gst_amount || 0).toLocaleString()}`,
         `INR ${parseFloat(entry.tds_deducted || 0).toLocaleString()}`
     ]);
@@ -72,7 +77,7 @@ export const generateTaxPDF = (summary: any, revenueEntries: any[]) => {
     doc.setFontSize(10);
     doc.setTextColor(60);
     let currentY = finalY + 10;
-    summary.taxSavingTips.forEach((tip: string, index: number) => {
+    (summary.taxSavingTips || []).forEach((tip: string, index: number) => {
         const splitTip = doc.splitTextToSize(`${index + 1}. ${tip}`, pageWidth - 28);
         doc.text(splitTip, 14, currentY);
         currentY += splitTip.length * 5 + 2;

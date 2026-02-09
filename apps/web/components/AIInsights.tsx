@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Sparkles, TrendingUp, DollarSign, Lightbulb } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 interface AIInsightsProps {
     analytics?: {
@@ -22,38 +23,24 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
         setError('');
 
         try {
-            // First, fetch real analytics data from all connected platforms
-            const token = localStorage.getItem('token');
-
-            // Fetch Instagram analytics
+            // Fetch real analytics data from all connected platforms using authenticated api client
             let instagramData = null;
             try {
-                const igResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram/analytics`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (igResponse.ok) {
-                    instagramData = await igResponse.json();
-                }
+                instagramData = await api.get('/instagram/analytics');
             } catch (err) {
                 console.log('Instagram data not available');
             }
 
-            // Fetch YouTube analytics
             let youtubeData = null;
             try {
-                const ytResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/youtube/analytics`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (ytResponse.ok) {
-                    youtubeData = await ytResponse.json();
-                }
+                youtubeData = await api.get('/youtube/analytics');
             } catch (err) {
                 console.log('YouTube data not available');
             }
 
             // Combine all analytics data
             const comprehensiveAnalytics = {
-                instagram: instagramData ? {
+                instagram: instagramData?.account ? {
                     followers: instagramData.account?.followers_count || 0,
                     posts: instagramData.account?.media_count || 0,
                     engagementRate: instagramData.account?.engagement_rate || 0,
@@ -62,7 +49,7 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
                     topPosts: instagramData.topPosts?.slice(0, 3) || [],
                     username: instagramData.account?.username || ''
                 } : null,
-                youtube: youtubeData ? {
+                youtube: youtubeData?.channelStats ? {
                     subscribers: youtubeData.channelStats?.subscriberCount || 0,
                     totalViews: youtubeData.channelStats?.totalViews || 0,
                     totalVideos: youtubeData.channelStats?.totalVideos || 0,
@@ -71,20 +58,7 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
             };
 
             // Generate AI insights with comprehensive data
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/insights`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    analytics: comprehensiveAnalytics
-                })
-            });
-
-            if (!response.ok) throw new Error('Failed to generate insights');
-
-            const data = await response.json();
+            const data = await api.post('/ai/insights', { analytics: comprehensiveAnalytics });
             setInsights(data.insights);
         } catch (err: any) {
             setError(err.message || 'Failed to generate AI insights');

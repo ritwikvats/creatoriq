@@ -21,6 +21,11 @@ export default function TaxDashboard() {
             if (user) {
                 try {
                     const res = await fetch(`${API_URL}/tax/${user.id}/summary?year=${year}`);
+                    if (!res.ok) {
+                        console.error('Tax API error:', res.status);
+                        setSummary(null);
+                        return;
+                    }
                     const data = await res.json();
                     setSummary(data);
                 } catch (error) {
@@ -69,13 +74,24 @@ export default function TaxDashboard() {
         );
     }
 
+    if (!summary) {
+        return (
+            <DashboardLayout>
+                <div className="p-8 text-center">
+                    <h1 className="text-3xl font-bold text-dark-800 mb-4">Tax Dashboard</h1>
+                    <p className="text-dark-600">No tax data available. Add revenue entries to see your tax analysis.</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout>
             <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-dark-800">Tax Dashboard</h1>
-                        <p className="text-dark-600">Financial Year {summary?.financialYear} Analysis (India)</p>
+                        <p className="text-dark-600">Financial Year {summary?.financialYear || `${year}-${year + 1}`} Analysis (India)</p>
                     </div>
                     <div className="flex gap-4">
                         <select
@@ -171,15 +187,15 @@ export default function TaxDashboard() {
                                     <div className="space-y-3">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-dark-500">Revenue:</span>
-                                            <span className="font-semibold">₹{data.total.toLocaleString()}</span>
+                                            <span className="font-semibold">₹{(data?.total || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-dark-500">GST:</span>
-                                            <span className="text-primary-600 font-semibold">₹{data.gst.toLocaleString()}</span>
+                                            <span className="text-primary-600 font-semibold">₹{(data?.gst || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-dark-500">TDS:</span>
-                                            <span className="text-red-600 font-semibold">₹{data.tds.toLocaleString()}</span>
+                                            <span className="text-red-600 font-semibold">₹{(data?.tds || 0).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -195,7 +211,7 @@ export default function TaxDashboard() {
                                 AI Tax Advisor
                             </h2>
                             <div className="space-y-6">
-                                {summary?.taxSavingTips?.map((tip: string, i: number) => (
+                                {(summary?.taxSavingTips || []).map((tip: string, i: number) => (
                                     <div key={i} className="flex gap-4">
                                         <div className="flex-shrink-0 w-6 h-6 bg-primary-600/30 rounded-full flex items-center justify-center text-primary-400 font-bold">
                                             {i + 1}

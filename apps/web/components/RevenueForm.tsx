@@ -13,6 +13,7 @@ interface RevenueFormProps {
 
 export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueFormProps) {
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         source: 'brand_deal',
         amount: '',
@@ -27,6 +28,7 @@ export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueForm
         if (!userId) return;
 
         setLoading(true);
+        setError('');
         try {
             const response = await fetch(`${API_URL}/revenue`, {
                 method: 'POST',
@@ -41,10 +43,11 @@ export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueForm
             if (response.ok) {
                 onSuccess();
             } else {
-                console.error('Failed to save revenue');
+                const errData = await response.json().catch(() => ({}));
+                setError(errData.error || 'Failed to save revenue entry. Please try again.');
             }
-        } catch (error) {
-            console.error('Error saving revenue:', error);
+        } catch (err: any) {
+            setError(err.message || 'Network error. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -52,6 +55,11 @@ export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueForm
 
     return (
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                </div>
+            )}
             <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-primary-100 rounded-lg">
                     <IndianRupee className="w-6 h-6 text-primary-600" />
@@ -101,7 +109,7 @@ export default function RevenueForm({ userId, onSuccess, onCancel }: RevenueForm
                 <div className="space-y-2">
                     <label className="text-sm font-semibold text-dark-700 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        Date Recieved
+                        Date Received
                     </label>
                     <input
                         type="date"

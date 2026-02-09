@@ -37,13 +37,25 @@ export default function RevenuePage() {
                 fetch(`${API_URL}/revenue/${uid}/summary`)
             ]);
 
+            if (!revRes.ok || !sumRes.ok) {
+                console.error('API returned error:', revRes.status, sumRes.status);
+                setRevenue([]);
+                setSummary({ total: 0, bySource: {}, count: 0 });
+                return;
+            }
+
             const revData = await revRes.json();
             const sumData = await sumRes.json();
 
             setRevenue(revData.revenue || []);
-            setSummary(sumData);
+            setSummary({
+                total: sumData.total || 0,
+                bySource: sumData.bySource || {},
+                count: sumData.count || 0,
+            });
         } catch (error) {
             console.error('Error fetching revenue data:', error);
+            setSummary({ total: 0, bySource: {}, count: 0 });
         } finally {
             setLoading(false);
         }
@@ -52,6 +64,17 @@ export default function RevenuePage() {
     const handleSuccess = () => {
         setIsFormOpen(false);
         if (userId) fetchData(userId);
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/revenue/${id}`, { method: 'DELETE' });
+            if (res.ok && userId) {
+                fetchData(userId);
+            }
+        } catch (error) {
+            console.error('Error deleting revenue:', error);
+        }
     };
 
     const handleExport = () => {
@@ -96,7 +119,7 @@ export default function RevenuePage() {
                             <span className="text-dark-600 text-sm font-medium">Total Revenue</span>
                         </div>
                         <h2 className="text-3xl font-bold text-dark-800">
-                            ₹{summary.total?.toLocaleString()}
+                            ₹{(summary?.total || 0).toLocaleString()}
                         </h2>
                         <div className="mt-2 flex items-center gap-1 text-green-600 text-sm font-semibold">
                             <TrendingUp className="w-4 h-4" />
@@ -112,9 +135,9 @@ export default function RevenuePage() {
                             <span className="text-dark-600 text-sm font-medium">Avg. Per Month</span>
                         </div>
                         <h2 className="text-3xl font-bold text-dark-800">
-                            ₹{(summary.total / (summary.count || 1))?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            ₹{((summary?.total || 0) / (summary?.count || 1)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </h2>
-                        <p className="mt-1 text-xs text-dark-500">Based on {summary.count} entries</p>
+                        <p className="mt-1 text-xs text-dark-500">Based on {summary?.count || 0} entries</p>
                     </div>
 
                     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
@@ -125,7 +148,7 @@ export default function RevenuePage() {
                             <span className="text-dark-600 text-sm font-medium">Estimated Taxes</span>
                         </div>
                         <h2 className="text-3xl font-bold text-dark-800">
-                            ₹{(summary.total * 0.18)?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            ₹{((summary?.total || 0) * 0.18).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </h2>
                         <p className="mt-1 text-xs text-dark-500">Projected GST (18%)</p>
                     </div>
@@ -139,7 +162,7 @@ export default function RevenuePage() {
                                 <h2 className="text-xl font-bold text-dark-800">Recent Entries</h2>
                             </div>
                             <div className="p-0">
-                                <RevenueTable revenue={revenue} loading={loading} />
+                                <RevenueTable revenue={revenue} loading={loading} onDelete={handleDelete} />
                             </div>
                         </div>
                     </div>
@@ -149,24 +172,24 @@ export default function RevenuePage() {
                         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
                             <h2 className="text-xl font-bold text-dark-800 mb-6">Revenue Sources</h2>
                             <div className="space-y-4">
-                                {Object.entries(summary.bySource).map(([source, amount]: [string, any]) => (
+                                {Object.entries(summary?.bySource || {}).map(([source, amount]: [string, any]) => (
                                     <div key={source} className="space-y-1">
                                         <div className="flex justify-between items-center text-sm font-medium">
                                             <span className="capitalize">{source.replace('_', ' ')}</span>
                                             <span className="text-dark-800 font-bold">
-                                                {((amount / summary.total) * 100).toFixed(1)}%
+                                                {((amount / (summary.total || 1)) * 100).toFixed(1)}%
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                                             <div
                                                 className="bg-primary-600 h-2 rounded-full"
-                                                style={{ width: `${(amount / summary.total) * 100}%` }}
+                                                style={{ width: `${(amount / (summary.total || 1)) * 100}%` }}
                                             />
                                         </div>
-                                        <div className="text-right text-xs text-dark-500">₹{amount.toLocaleString()}</div>
+                                        <div className="text-right text-xs text-dark-500">₹{(amount || 0).toLocaleString()}</div>
                                     </div>
                                 ))}
-                                {Object.keys(summary.bySource).length === 0 && (
+                                {Object.keys(summary?.bySource || {}).length === 0 && (
                                     <p className="text-dark-500 text-center py-8">No data available yet</p>
                                 )}
                             </div>

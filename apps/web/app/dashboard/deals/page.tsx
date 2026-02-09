@@ -50,8 +50,13 @@ export default function DealsPage() {
             setLoading(true);
             const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
             const response = await fetch(`${api_url}/deals/${userId}`);
+            if (!response.ok) {
+                console.error('Deals API error:', response.status);
+                setDeals([]);
+                return;
+            }
             const data = await response.json();
-            setDeals(data || []);
+            setDeals(Array.isArray(data) ? data : data?.deals || []);
         } catch (error) {
             console.error('Failed to fetch deals:', error);
         } finally {

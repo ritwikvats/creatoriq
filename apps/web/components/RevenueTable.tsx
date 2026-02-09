@@ -5,9 +5,10 @@ import { Tag, Calendar, IndianRupee, Trash2 } from 'lucide-react';
 interface RevenueTableProps {
     revenue: any[];
     loading: boolean;
+    onDelete?: (id: string) => void;
 }
 
-export default function RevenueTable({ revenue, loading }: RevenueTableProps) {
+export default function RevenueTable({ revenue, loading, onDelete }: RevenueTableProps) {
     if (loading) {
         return (
             <div className="p-12 flex flex-col items-center justify-center space-y-4">
@@ -92,7 +93,14 @@ export default function RevenueTable({ revenue, loading }: RevenueTableProps) {
                                 </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                <button
+                                    onClick={() => {
+                                        if (onDelete && confirm('Delete this revenue entry?')) {
+                                            onDelete(item.id);
+                                        }
+                                    }}
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </td>

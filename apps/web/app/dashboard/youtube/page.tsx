@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
 
 interface YouTubeStats {
     connected: boolean;
@@ -29,8 +30,11 @@ export default function YouTubePage() {
     const fetchYouTubeStats = async () => {
         try {
             setLoading(true);
-            // Using test user UUID for now
-            const res = await fetch('http://localhost:3001/youtube/stats/00000000-0000-0000-0000-000000000001');
+            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+            const res = await fetch(`${api_url}/youtube/stats`);
+            if (!res.ok) {
+                throw new Error(`API error: ${res.status}`);
+            }
             const data = await res.json();
             setStats(data);
         } catch (err: any) {
@@ -42,37 +46,42 @@ export default function YouTubePage() {
 
     if (loading) {
         return (
-            <div className="p-8">
-                <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <DashboardLayout>
+                <div className="p-8">
+                    <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                 </div>
-            </div>
+            </DashboardLayout>
         );
     }
 
     if (error || !stats?.connected) {
         return (
-            <div className="p-8">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h2 className="text-red-800 font-semibold">YouTube Not Connected</h2>
-                    <p className="text-red-600 mt-2">
-                        {error || 'Please connect your YouTube account first.'}
-                    </p>
-                    <a
-                        href="/dashboard"
-                        className="mt-4 inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                    >
-                        Go to Dashboard
-                    </a>
+            <DashboardLayout>
+                <div className="p-8">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h2 className="text-red-800 font-semibold">YouTube Not Connected</h2>
+                        <p className="text-red-600 mt-2">
+                            {error || 'Please connect your YouTube account first.'}
+                        </p>
+                        <a
+                            href="/dashboard"
+                            className="mt-4 inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                            Go to Dashboard
+                        </a>
+                    </div>
                 </div>
-            </div>
+            </DashboardLayout>
         );
     }
 
     const { channel, recentVideos = [], revenue = 0 } = stats;
 
     return (
+        <DashboardLayout>
         <div className="p-8 max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
@@ -170,5 +179,6 @@ export default function YouTubePage() {
                 </button>
             </div>
         </div>
+        </DashboardLayout>
     );
 }

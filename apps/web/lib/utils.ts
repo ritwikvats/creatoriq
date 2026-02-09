@@ -10,10 +10,12 @@ export const downloadAsCSV = (data: any[], filename: string) => {
         ...data.map(row =>
             headers.map(header => {
                 const value = row[header] ?? '';
-                // Handle strings with commas
-                return typeof value === 'string' && value.includes(',')
-                    ? `"${value}"`
-                    : value;
+                const strValue = String(value);
+                // Handle strings with commas, quotes, or newlines
+                if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+                    return `"${strValue.replace(/"/g, '""')}"`;
+                }
+                return strValue;
             }).join(',')
         )
     ].join('\n');
@@ -28,5 +30,6 @@ export const downloadAsCSV = (data: any[], filename: string) => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 };

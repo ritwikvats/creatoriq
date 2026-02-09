@@ -29,10 +29,13 @@ export default function InstagramAnalyticsPage() {
     const fetchInstagramAnalytics = async (userId: string) => {
         try {
             setLoading(true);
-            // Use test UUID fallback for testing
-            const testUserId = userId || '00000000-0000-0000-0000-000000000001';
             const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const response = await fetch(`${api_url}/instagram/analytics/${testUserId}`);
+            const response = await fetch(`${api_url}/instagram/analytics/${userId}`);
+            if (!response.ok) {
+                console.error('Instagram API error:', response.status);
+                setAnalytics(null);
+                return;
+            }
             const data = await response.json();
 
             console.log('Instagram analytics response:', data);
@@ -93,7 +96,7 @@ export default function InstagramAnalyticsPage() {
         );
     }
 
-    const { account, recentMedia, topPosts, stats } = analytics;
+    const { account, recentMedia, topPosts, stats = {} } = analytics || {};
 
     return (
         <DashboardLayout>
@@ -188,7 +191,7 @@ export default function InstagramAnalyticsPage() {
                             <TrendingUp className="w-5 h-5 text-green-500" />
                             <p className="text-sm text-dark-600 font-medium">Total Engagement</p>
                         </div>
-                        <p className="text-3xl font-bold text-dark-800">{stats.total_engagement?.toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-dark-800">{(stats?.total_engagement || 0).toLocaleString()}</p>
                         <p className="text-xs text-dark-500 mt-1">likes + comments</p>
                     </div>
                 </div>
