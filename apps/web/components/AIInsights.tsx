@@ -104,7 +104,7 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
                     </h3>
                 </div>
                 <span className="text-xs font-semibold px-3 py-1 bg-gradient-to-r from-purple-600 to-primary-600 text-white rounded-full shadow-lg">
-                    Powered by Fuelix GPT-5.2
+                    Powered by GPT-5.2
                 </span>
             </div>
 
