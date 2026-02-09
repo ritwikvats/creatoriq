@@ -44,7 +44,7 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     const userId = req.user!.id;
 
     try {
-        const revenue = await revenueService.updateRevenue(id, userId, req.body);
+        const revenue = await revenueService.updateRevenue(id, { ...req.body, user_id: userId });
         res.json({ revenue });
     } catch (error: any) {
         console.error('Update revenue error:', error);
@@ -58,7 +58,7 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
     const userId = req.user!.id;
 
     try {
-        await revenueService.deleteRevenue(id, userId);
+        await revenueService.deleteRevenue(id);
         res.json({ message: 'Revenue entry deleted successfully' });
     } catch (error: any) {
         console.error('Delete revenue error:', error);

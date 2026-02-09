@@ -76,7 +76,7 @@ async function captureYouTubeSnapshot(platform: any) {
             sum + parseInt(video.commentCount || '0'), 0);
 
         const avgEngagementRate = recentVideos.length > 0 && channelStats.subscriberCount > 0
-            ? ((totalLikes + totalComments) / recentVideos.length / parseInt(channelStats.subscriberCount || '0')) * 100
+            ? ((totalLikes + totalComments) / recentVideos.length / parseInt(String(channelStats.subscriberCount || '0'))) * 100
             : 0;
 
         // Save snapshot
@@ -85,9 +85,9 @@ async function captureYouTubeSnapshot(platform: any) {
             platform: 'youtube',
             snapshot_date: new Date().toISOString().split('T')[0],
             metrics: {
-                subscribers: parseInt(channelStats.subscriberCount || '0'),
-                total_views: parseInt(channelStats.totalViews || '0'),
-                total_videos: parseInt(channelStats.totalVideos || '0'),
+                subscribers: parseInt(String(channelStats.subscriberCount || '0')),
+                total_views: parseInt(String(channelStats.totalViews || '0')),
+                total_videos: parseInt(String(channelStats.totalVideos || '0')),
                 recent_videos_count: recentVideos.length,
                 avg_engagement_rate: parseFloat(avgEngagementRate.toFixed(4)),
                 total_likes: totalLikes,

@@ -27,7 +27,7 @@ Sentry.init({
     environment: process.env.NODE_ENV || 'development',
     tracesSampleRate: 1.0,
     integrations: [
-        Sentry.expressIntegration({ app }),
+        Sentry.expressIntegration(),
     ],
     beforeSend(event, hint) {
         if (event.request?.headers) {
@@ -123,6 +123,8 @@ import dealsRoutes from './routes/deals';
 import analyticsRoutes from './routes/analytics';
 import audienceRoutes from './routes/audience';
 import openclawRoutes from './routes/openclaw';
+import testSentryRoutes from './routes/test-sentry';
+import statusRoutes from './routes/status';
 
 // Import cron services
 import { initializeCronJobs } from './services/cron.service';
@@ -142,6 +144,8 @@ app.use('/tax', taxRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/audience', audienceRoutes);
+app.use('/test-sentry', testSentryRoutes);
+app.use('/status', statusRoutes);
 
 // Import rate limiters
 import { generalLimiter, authLimiter, aiLimiter, platformConnectLimiter } from './middleware/rate-limit';
