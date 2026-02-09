@@ -76,7 +76,8 @@ if (process.env.NODE_ENV === 'production') {
 app.use(cors({
     origin: [
         process.env.FRONTEND_URL || 'http://localhost:3000',
-        'http://localhost:3004', // Alternative port
+        'https://creatoriq-web.onrender.com',
+        'http://localhost:3004',
         'http://localhost:3002',
     ],
     credentials: true,
