@@ -91,35 +91,41 @@ ${analytics.instagram.topPosts?.map((post, i) => `${i + 1}. ${post.like_count ||
 - Total Videos: ${analytics.youtube.totalVideos}
 - Avg Views per Video: ${Math.round(analytics.youtube.totalViews / analytics.youtube.totalVideos).toLocaleString()}
 ` : 'YouTube: Not connected';
-        const prompt = `You are a creator growth consultant. Analyze this REAL data and give concise, actionable insights.
+        const prompt = `You are an expert creator growth consultant analyzing REAL performance data. Generate beautiful, actionable insights.
 
+# CREATOR DATA:
 ${instagramContext}
 ${youtubeContext}
 
-Write a SHORT, scannable analysis (max 250 words). Use this exact format:
+# FORMAT YOUR RESPONSE LIKE THIS:
 
-## 📈 Overview
-2-3 sentences comparing their metrics to industry benchmarks. Use specific numbers.
+## 📈 Performance Overview
+Compare their metrics to industry standards with specific numbers. What's their current standing?
 
-## 🎯 Strengths
-- One or two things working well (with data)
+## 🎯 Key Strengths
+- Specific strength backed by their data
+- Another strength with numbers
 
-## ⚠️ Improve
-- One or two areas that need work (current vs ideal)
+## ⚠️ Growth Opportunities
+- Area that needs work (current vs ideal metrics)
+- Another opportunity with actionable advice
 
-## 💡 Action Items
-1. [Most important action] — expected result
-2. [Second action] — expected result
-3. [Third action] — expected result
+## 💡 Top 3 Action Items
+1. **[Action]** — Why it matters + expected outcome
+2. **[Action]** — Why + expected outcome
+3. **[Action]** — Why + expected outcome
 
-Rules: Be specific with their numbers. No filler. No generic advice. Keep it short.`;
+## 🚀 30-Day Goal
+One specific, measurable goal based on their current numbers.
+
+Rules: Use their REAL numbers. Include industry benchmarks for comparison. Be specific and actionable. No filler.`;
         try {
             const response = await this.makeRequest('/chat/completions', {
                 model: FUELIX_MODEL,
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a concise social media analytics consultant. Keep responses under 250 words. Use markdown formatting with emojis for section headers only.'
+                        content: 'You are an expert social media analytics consultant. Use clean markdown formatting with emojis for section headers. Be data-driven and specific.'
                     },
                     {
                         role: 'user',
@@ -127,7 +133,7 @@ Rules: Be specific with their numbers. No filler. No generic advice. Keep it sho
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 500,
+                max_tokens: 1000,
             });
             return response.choices?.[0]?.message?.content || 'Unable to generate insights';
         }
