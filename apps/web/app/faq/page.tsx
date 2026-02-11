@@ -37,12 +37,24 @@ const faqs = [
         a: 'Yes, you can disconnect YouTube or Instagram at any time from your Dashboard. When disconnected, we delete the stored access tokens immediately.',
     },
     {
+        q: 'How do AI-Powered Insights work?',
+        a: 'CreatorIQ uses GPT-5.2 to analyze your real platform data — subscribers, views, engagement rates, revenue, and audience demographics. The AI compares your metrics against industry benchmarks and generates personalized recommendations like optimal posting times, content strategy tips, audience growth tactics, and revenue optimization ideas. Insights are refreshed each time you visit your dashboard, so they always reflect your latest performance.',
+    },
+    {
+        q: 'What AI model powers CreatorIQ?',
+        a: 'We use GPT-5.2 as our primary AI model, with Llama 3.3 as a fallback for reliability. The AI is used for analytics insights, content recommendations, tax estimation guidance, and brand deal suggestions. All AI-generated content is clearly labeled, and we recommend verifying any financial advice with a professional.',
+    },
+    {
         q: 'How does the tax calculator work?',
-        a: 'Our tax calculator uses your revenue entries to estimate GST liability, TDS deductions, and net income based on current Indian tax rules. This is for estimation only - always consult a qualified Chartered Accountant (CA) for official tax filings.',
+        a: 'Our AI-powered tax calculator takes your revenue entries (YouTube AdSense, brand deals, sponsorships, etc.) and uses Indian tax rules to estimate your GST liability, TDS deductions, advance tax requirements, and net income. The AI also suggests tax-saving strategies specific to content creators, like Section 44ADA presumptive taxation and eligible deductions. This is for estimation only — always consult a qualified Chartered Accountant (CA) for official tax filings.',
     },
     {
         q: 'Is the tax calculation accurate?',
-        a: 'Our calculations are based on the latest Indian tax rules and are updated regularly. However, they are estimates for informational purposes only. Tax laws can change, and individual circumstances vary. Always verify with a CA.',
+        a: 'Our calculations are based on the latest Indian tax rules and are updated regularly. The AI cross-checks rates and thresholds, but these are estimates for informational purposes only. Tax laws can change, and individual circumstances vary. Always verify with a CA before filing.',
+    },
+    {
+        q: 'How do Brand Deals work on CreatorIQ?',
+        a: 'The Brand Deals feature helps you manage your sponsorship pipeline end-to-end. You can track deals through stages (Lead, Negotiation, Contracted, In Progress, Completed, Paid) using a Kanban board. Add deal details like brand name, amount, deliverables, and deadlines. The AI analyzes your engagement metrics and audience demographics to suggest fair pricing for sponsorships and help you negotiate better rates.',
     },
     {
         q: 'How do I delete my account?',
