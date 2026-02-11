@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     title: "CreatorIQ - Cross-Platform Analytics for Creators",
     description: "Unified dashboard for YouTube, Instagram, LinkedIn & X creators to track performance, revenue, and brand deals—all in one place.",
     keywords: ["creator analytics", "YouTube analytics", "Instagram insights", "revenue tracking", "creator tools"],
+    icons: {
+        icon: '/icon.svg',
+    },
     verification: {
         google: "RxvQ-Xcu17QPHeV0t2s2W_IzuIPxPJvN6kzNZnsF5jo",
     },
