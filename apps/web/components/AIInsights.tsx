@@ -5,7 +5,6 @@ import {
     Sparkles, TrendingUp, DollarSign, Lightbulb, RefreshCw,
     MessageCircle, Zap, Target, Rocket, PenLine, Hash, CalendarDays
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api-client';
 import AIChatPanel from './AIChatPanel';
 
@@ -35,6 +34,17 @@ function getSectionStyle(title: string) {
     return SECTION_STYLES.default;
 }
 
+// Strip markdown symbols that shouldn't appear as raw text
+function cleanMarkdown(text: string): string {
+    return text
+        .replace(/\*\*/g, '')     // Remove **bold**
+        .replace(/\*/g, '')       // Remove *italic*
+        .replace(/^###+ /gm, '')  // Remove ### sub-headers
+        .replace(/^## /gm, '')    // Remove stray ## headers
+        .replace(/`([^`]+)`/g, '$1') // Remove `code` backticks
+        .trim();
+}
+
 function parseInsightsIntoSections(markdown: string): InsightSection[] {
     const sections: InsightSection[] = [];
     const parts = markdown.split(/^## /m).filter(Boolean);
@@ -42,7 +52,7 @@ function parseInsightsIntoSections(markdown: string): InsightSection[] {
     for (const part of parts) {
         const lines = part.trim().split('\n');
         const titleLine = lines[0] || '';
-        const content = lines.slice(1).join('\n').trim();
+        const content = cleanMarkdown(lines.slice(1).join('\n').trim());
 
         // Clean emoji from title
         const cleanTitle = titleLine.replace(/^[^\w]*/, '').trim();
@@ -194,12 +204,32 @@ export default function AIInsights() {
                                         <IconComponent className={`w-4 h-4 ${style.iconColor}`} />
                                         <h4 className="font-bold text-dark-800 text-sm">{section.title}</h4>
                                     </div>
-                                    <div className="prose prose-sm max-w-none
-                                        prose-p:text-dark-600 prose-p:my-1 prose-p:text-xs prose-p:leading-relaxed
-                                        prose-li:text-dark-600 prose-li:text-xs prose-li:my-0.5
-                                        prose-strong:text-dark-800 prose-strong:text-xs
-                                        prose-ul:my-1 prose-ol:my-1">
-                                        <ReactMarkdown>{section.content}</ReactMarkdown>
+                                    <div className="space-y-1">
+                                        {section.content.split('\n').filter(line => line.trim()).map((line, j) => {
+                                            const trimmed = line.trim();
+                                            // Bullet point
+                                            if (trimmed.startsWith('- ')) {
+                                                return (
+                                                    <div key={j} className="flex items-start gap-2 text-dark-600 text-xs leading-relaxed">
+                                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-dark-400 flex-shrink-0"></span>
+                                                        <span>{trimmed.slice(2)}</span>
+                                                    </div>
+                                                );
+                                            }
+                                            // Numbered list
+                                            if (/^\d+[\.\)] /.test(trimmed)) {
+                                                const num = trimmed.match(/^(\d+)/)?.[1];
+                                                const text = trimmed.replace(/^\d+[\.\)] /, '');
+                                                return (
+                                                    <div key={j} className="flex items-start gap-2 text-dark-600 text-xs leading-relaxed">
+                                                        <span className={`flex-shrink-0 w-5 h-5 rounded-full ${style.bg} ${style.iconColor} flex items-center justify-center text-[10px] font-bold mt-0.5`}>{num}</span>
+                                                        <span>{text}</span>
+                                                    </div>
+                                                );
+                                            }
+                                            // Plain text
+                                            return <p key={j} className="text-dark-600 text-xs leading-relaxed">{trimmed}</p>;
+                                        })}
                                     </div>
                                 </div>
                             );
@@ -217,16 +247,22 @@ export default function AIInsights() {
                     </div>
                 )}
 
-                {/* Fallback if parsing fails - show raw markdown */}
+                {/* Fallback if parsing fails - show cleaned text */}
                 {insights && sections.length === 0 && (
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <div className="prose prose-sm max-w-none
-                            prose-headings:text-dark-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1
-                            prose-p:text-dark-600 prose-p:my-1 prose-p:text-xs
-                            prose-li:text-dark-600 prose-li:text-xs
-                            prose-strong:text-dark-800
-                            prose-ul:my-1 prose-ol:my-1">
-                            <ReactMarkdown>{insights}</ReactMarkdown>
+                        <div className="space-y-1.5">
+                            {cleanMarkdown(insights).split('\n').filter(line => line.trim()).map((line, i) => {
+                                const trimmed = line.trim();
+                                if (trimmed.startsWith('- ')) {
+                                    return (
+                                        <div key={i} className="flex items-start gap-2 text-dark-600 text-xs">
+                                            <span className="mt-1.5 w-1 h-1 rounded-full bg-dark-400 flex-shrink-0"></span>
+                                            <span>{trimmed.slice(2)}</span>
+                                        </div>
+                                    );
+                                }
+                                return <p key={i} className="text-dark-600 text-xs leading-relaxed">{trimmed}</p>;
+                            })}
                         </div>
                     </div>
                 )}

@@ -91,52 +91,48 @@ ${analytics.instagram.topPosts?.map((post, i) => `${i + 1}. ${post.like_count ||
 - Total Videos: ${analytics.youtube.totalVideos}
 - Avg Views per Video: ${Math.round(analytics.youtube.totalViews / analytics.youtube.totalVideos).toLocaleString()}
 ` : 'YouTube: Not connected';
-        const prompt = `Analyze this creator's data and give insights.
+        const prompt = `Analyze this creator's data. Give short, clean insights.
 
 DATA:
 ${instagramContext}
 ${youtubeContext}
 
-RESPOND IN EXACTLY THIS FORMAT (keep each section short and punchy):
+FORMAT (use ## for section headers ONLY, NO other markdown):
 
 ## Performance Overview
-
-One short paragraph (2-3 sentences max). Compare their numbers to benchmarks. No bullet points here.
+2-3 plain text sentences. Compare to benchmarks.
 
 ## Key Strengths
-
-- Short strength with a number
-- Another short strength
+- Short one-liner strength
+- Another one-liner
 
 ## Growth Opportunities
-
-- One clear gap with what to fix
+- One clear gap to fix
 - Another opportunity
 
 ## Action Items
-
-1. **Do this** — one line why
-2. **Do this** — one line why
-3. **Do this** — one line why
+1. Do this — one line why
+2. Do this — one line why
+3. Do this — one line why
 
 ## 30-Day Goal
+One sentence with a specific number target.
 
-One sentence. Specific number target.
-
-RULES:
-- MAX 2-3 bullet points per section
-- Each bullet = ONE short line, not a paragraph
-- NO walls of text
-- NO repeating the same point
-- Use their REAL numbers
-- Be direct, not verbose`;
+CRITICAL FORMATTING RULES:
+- Use ## for section headers (exactly as shown above)
+- NEVER use ** for bold. NEVER use *** or ### or any other markdown
+- Just write plain text with - for bullets and 1. 2. 3. for numbered lists
+- Keep each bullet to ONE short line
+- MAX 2-3 bullets per section
+- No paragraphs, no walls of text
+- Use their real numbers`;
         try {
             const response = await this.makeRequest('/chat/completions', {
                 model: FUELIX_MODEL,
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a concise creator growth consultant. Write short, punchy insights. Never write paragraphs where a single line will do. Every word must earn its place. No filler, no fluff, no repetition.'
+                        content: 'You are a concise creator growth consultant. Write plain text only. NEVER use markdown bold (**), NEVER use ### headers. Only use ## for section headers and - for bullets. Keep everything short and scannable.'
                     },
                     {
                         role: 'user',
