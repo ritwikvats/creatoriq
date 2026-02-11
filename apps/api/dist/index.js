@@ -156,6 +156,7 @@ const audience_1 = __importDefault(require("./routes/audience"));
 const openclaw_1 = __importDefault(require("./routes/openclaw"));
 const test_sentry_1 = __importDefault(require("./routes/test-sentry"));
 const status_1 = __importDefault(require("./routes/status"));
+const competitors_1 = __importDefault(require("./routes/competitors"));
 // Import cron services
 const cron_service_1 = require("./services/cron.service");
 // Mount routes with rate limiting
@@ -172,6 +173,8 @@ app.use('/tax', tax_1.default);
 app.use('/deals', deals_1.default);
 app.use('/analytics', analytics_1.default);
 app.use('/audience', audience_1.default);
+app.use('/competitors/gap-analysis', rate_limit_1.aiLimiter);
+app.use('/competitors', competitors_1.default);
 app.use('/test-sentry', test_sentry_1.default);
 app.use('/status', status_1.default);
 // Sentry error handler (must be BEFORE other error handlers)

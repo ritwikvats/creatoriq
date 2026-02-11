@@ -471,6 +471,80 @@ RULES:
     }
 
     /**
+     * Generate AI-powered competitor gap analysis (structured JSON)
+     */
+    async generateCompetitorAnalysis(platform: string, userStats: any, competitorStats: any): Promise<any> {
+        const prompt = `You are analyzing a creator's competitive position on ${platform}.
+
+YOUR CREATOR:
+- Username: @${userStats.username || 'unknown'}
+- Followers: ${userStats.followers || 0}
+- Engagement Rate: ${userStats.engagementRate || 0}%
+- Avg Likes: ${userStats.avgLikes || 0}
+- Avg Comments: ${userStats.avgComments || 0}
+- Posts: ${userStats.postsCount || 0}
+- Posts/Week: ${userStats.postsPerWeek || 'unknown'}
+
+COMPETITOR:
+- Username: @${competitorStats.username || 'unknown'}
+- Followers: ${competitorStats.followers || 0}
+- Engagement Rate: ${competitorStats.engagementRate || 0}%
+- Avg Likes: ${competitorStats.avgLikes || 0}
+- Avg Comments: ${competitorStats.avgComments || 0}
+- Posts: ${competitorStats.postsCount || 0}
+- Posts/Week: ${competitorStats.postsPerWeek || 'unknown'}
+
+Return ONLY valid JSON (no markdown, no code fences). Use this exact structure:
+{
+  "overallVerdict": "<one sentence comparing both creators with real numbers>",
+  "competitiveScore": <number 0-100, where 100 means you're dominating>,
+  "metrics": [
+    { "metric": "Followers", "you": <number>, "competitor": <number>, "difference": "<percentage like +50% or -80%>", "verdict": "ahead|behind|tied" },
+    { "metric": "Engagement Rate", "you": <number>, "competitor": <number>, "difference": "<percentage>", "verdict": "ahead|behind|tied" },
+    { "metric": "Avg Likes", "you": <number>, "competitor": <number>, "difference": "<percentage>", "verdict": "ahead|behind|tied" },
+    { "metric": "Posts/Week", "you": <number>, "competitor": <number>, "difference": "<percentage>", "verdict": "ahead|behind|tied" }
+  ],
+  "strengths": ["<strength 1 with real numbers>", "<strength 2 with real numbers>"],
+  "gaps": ["<gap 1 with real numbers>", "<gap 2 with real numbers>"],
+  "actionPlan": [
+    { "action": "<specific action>", "expectedImpact": "<what will improve>", "priority": "high|medium|low", "timeframe": "<1 week|2 weeks|1 month>" }
+  ],
+  "contentStrategy": "<2-3 sentence strategy recommendation based on competitor analysis>"
+}
+
+RULES:
+- Use REAL numbers from the data, not placeholders
+- competitiveScore: factor in followers, engagement, consistency
+- Be specific and actionable in actionPlan
+- strengths/gaps: 2-3 items each, always reference real metrics
+- actionPlan: 2-4 items, ordered by priority`;
+
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a competitive intelligence engine for creators. Return ONLY valid JSON. No markdown, no explanations, no code fences. Just the JSON object.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.5,
+                max_tokens: 1000,
+            });
+
+            const content = response.choices?.[0]?.message?.content || '{}';
+            const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            return JSON.parse(cleaned);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      * Generate technical content suggestions for tech creators
      */
     async generateTechnicalContent(topic: string, targetAudience: string): Promise<any> {

@@ -131,6 +131,7 @@ import audienceRoutes from './routes/audience';
 import openclawRoutes from './routes/openclaw';
 import testSentryRoutes from './routes/test-sentry';
 import statusRoutes from './routes/status';
+import competitorsRoutes from './routes/competitors';
 
 // Import cron services
 import { initializeCronJobs } from './services/cron.service';
@@ -150,6 +151,8 @@ app.use('/tax', taxRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/audience', audienceRoutes);
+app.use('/competitors/gap-analysis', aiLimiter);
+app.use('/competitors', competitorsRoutes);
 app.use('/test-sentry', testSentryRoutes);
 app.use('/status', statusRoutes);
 

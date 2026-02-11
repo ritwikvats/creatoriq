@@ -231,6 +231,54 @@ exports.aiService = {
         }
     },
     /**
+     * Generate AI-powered competitor gap analysis
+     * Primary: OpenClaw | Fallback: Groq
+     */
+    async generateCompetitorAnalysis(platform, userStats, competitorStats) {
+        // Try OpenClaw first
+        if (openclaw_service_1.openClawService.isAvailable()) {
+            try {
+                logger_service_1.apiLogger.info('Using OpenClaw for competitor analysis');
+                return await openclaw_service_1.openClawService.generateCompetitorAnalysis(platform, userStats, competitorStats);
+            }
+            catch (error) {
+                logger_service_1.apiLogger.warn('OpenClaw failed for competitor analysis, falling back to Groq', { error });
+            }
+        }
+        // Fallback to Groq
+        try {
+            logger_service_1.apiLogger.info('Using Groq (fallback) for competitor analysis');
+            const groq = getGroqClient();
+            const completion = await groq.chat.completions.create({
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a competitive intelligence engine for creators. Return ONLY valid JSON. No markdown, no explanations, no code fences.'
+                    },
+                    {
+                        role: 'user',
+                        content: `Compare these two ${platform} creators and return JSON with: overallVerdict (string), competitiveScore (0-100), metrics (array of {metric, you, competitor, difference, verdict}), strengths (array), gaps (array), actionPlan (array of {action, expectedImpact, priority, timeframe}), contentStrategy (string).
+
+YOUR CREATOR: @${userStats.username} - ${userStats.followers} followers, ${userStats.engagementRate}% engagement, ${userStats.avgLikes} avg likes, ${userStats.postsPerWeek || 0} posts/week
+COMPETITOR: @${competitorStats.username} - ${competitorStats.followers} followers, ${competitorStats.engagementRate}% engagement, ${competitorStats.avgLikes} avg likes, ${competitorStats.postsPerWeek || 0} posts/week
+
+Use real numbers.`
+                    }
+                ],
+                model: 'llama-3.3-70b-versatile',
+                temperature: 0.5,
+                max_tokens: 1000,
+                response_format: { type: 'json_object' },
+            });
+            const content = completion.choices[0]?.message?.content || '{}';
+            return JSON.parse(content);
+        }
+        catch (error) {
+            console.error('Competitor Analysis Error:', error);
+            throw new Error('Failed to generate competitor analysis');
+        }
+    },
+    /**
      * Analyze revenue trends and provide financial advice
      * Primary: OpenClaw | Fallback: Groq
      */

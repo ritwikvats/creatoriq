@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, DollarSign, FileText, Settings, Youtube, Instagram, LogOut, Briefcase, Users } from 'lucide-react';
+import { LayoutDashboard, BarChart3, DollarSign, FileText, Settings, Youtube, Instagram, LogOut, Briefcase, Users, Swords } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function Sidebar() {
         { icon: Youtube, label: 'YouTube', href: '/youtube' },
         { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
         { name: 'Audience', href: '/dashboard/audience', icon: Users },
+        { name: 'Competitors', href: '/dashboard/competitors', icon: Swords },
         { name: 'Revenue', href: '/dashboard/revenue', icon: DollarSign },
         { name: 'Tax Reports', href: '/dashboard/tax', icon: FileText },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
