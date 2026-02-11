@@ -101,34 +101,45 @@ ${analytics.instagram.topPosts?.map((post: any, i: number) =>
 - Avg Views per Video: ${Math.round(analytics.youtube.totalViews / analytics.youtube.totalVideos).toLocaleString()}
 ` : 'YouTube: Not connected';
 
-        const prompt = `You are an expert creator growth consultant analyzing REAL performance data. Generate beautiful, actionable insights.
+        const prompt = `Analyze this creator's data and give insights.
 
-# CREATOR DATA:
+DATA:
 ${instagramContext}
 ${youtubeContext}
 
-# FORMAT YOUR RESPONSE LIKE THIS:
+RESPOND IN EXACTLY THIS FORMAT (keep each section short and punchy):
 
-## 📈 Performance Overview
-Compare their metrics to industry standards with specific numbers. What's their current standing?
+## Performance Overview
 
-## 🎯 Key Strengths
-- Specific strength backed by their data
-- Another strength with numbers
+One short paragraph (2-3 sentences max). Compare their numbers to benchmarks. No bullet points here.
 
-## ⚠️ Growth Opportunities
-- Area that needs work (current vs ideal metrics)
-- Another opportunity with actionable advice
+## Key Strengths
 
-## 💡 Top 3 Action Items
-1. **[Action]** — Why it matters + expected outcome
-2. **[Action]** — Why + expected outcome
-3. **[Action]** — Why + expected outcome
+- Short strength with a number
+- Another short strength
 
-## 🚀 30-Day Goal
-One specific, measurable goal based on their current numbers.
+## Growth Opportunities
 
-Rules: Use their REAL numbers. Include industry benchmarks for comparison. Be specific and actionable. No filler.`;
+- One clear gap with what to fix
+- Another opportunity
+
+## Action Items
+
+1. **Do this** — one line why
+2. **Do this** — one line why
+3. **Do this** — one line why
+
+## 30-Day Goal
+
+One sentence. Specific number target.
+
+RULES:
+- MAX 2-3 bullet points per section
+- Each bullet = ONE short line, not a paragraph
+- NO walls of text
+- NO repeating the same point
+- Use their REAL numbers
+- Be direct, not verbose`;
 
         try {
             const response = await this.makeRequest('/chat/completions', {
@@ -136,7 +147,7 @@ Rules: Use their REAL numbers. Include industry benchmarks for comparison. Be sp
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are an expert social media analytics consultant. Use clean markdown formatting with emojis for section headers. Be data-driven and specific.'
+                        content: 'You are a concise creator growth consultant. Write short, punchy insights. Never write paragraphs where a single line will do. Every word must earn its place. No filler, no fluff, no repetition.'
                     },
                     {
                         role: 'user',
@@ -144,7 +155,7 @@ Rules: Use their REAL numbers. Include industry benchmarks for comparison. Be sp
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 1000,
+                max_tokens: 600,
             });
 
             return response.choices?.[0]?.message?.content || 'Unable to generate insights';
