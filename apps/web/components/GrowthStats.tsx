@@ -2,27 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 interface GrowthStatsProps {
-    userId: string;
     platform?: 'youtube' | 'instagram';
 }
 
-export default function GrowthStats({ userId, platform }: GrowthStatsProps) {
+export default function GrowthStats({ platform }: GrowthStatsProps) {
     const [growth, setGrowth] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchGrowthData();
-    }, [userId, platform]);
+    }, [platform]);
 
     const fetchGrowthData = async () => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
             const platformParam = platform ? `?platform=${platform}` : '';
-            const response = await fetch(`${api_url}/analytics/growth/${userId}${platformParam}`);
-            const data = await response.json();
+            const data = await api.get(`/analytics/growth${platformParam}`);
             setGrowth(data.growth);
         } catch (error) {
             console.error('Failed to fetch growth data:', error);
@@ -119,7 +117,7 @@ export default function GrowthStats({ userId, platform }: GrowthStatsProps) {
 
                     <div className="mt-4 pt-4 border-t border-gray-100">
                         <p className="text-xs text-gray-500">
-                            📅 Measured over {data.period_days} day{data.period_days !== 1 ? 's' : ''}
+                            Measured over {data.period_days} day{data.period_days !== 1 ? 's' : ''}
                         </p>
                     </div>
                 </div>

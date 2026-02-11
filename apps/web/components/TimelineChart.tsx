@@ -3,29 +3,28 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Calendar } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 interface TimelineChartProps {
-    userId: string;
+    userId?: string;
     platform?: 'youtube' | 'instagram' | 'all';
     days?: number;
 }
 
-export default function TimelineChart({ userId, platform = 'all', days = 30 }: TimelineChartProps) {
+export default function TimelineChart({ platform = 'all', days = 30 }: TimelineChartProps) {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDays, setSelectedDays] = useState(days);
 
     useEffect(() => {
         fetchTimelineData();
-    }, [userId, platform, selectedDays]);
+    }, [platform, selectedDays]);
 
     const fetchTimelineData = async () => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
             const platformParam = platform !== 'all' ? `&platform=${platform}` : '';
-            const response = await fetch(`${api_url}/analytics/timeline/${userId}?days=${selectedDays}${platformParam}`);
-            const result = await response.json();
+            const result = await api.get(`/analytics/timeline?days=${selectedDays}${platformParam}`);
 
             if (result.snapshots && result.snapshots.length > 0) {
                 // Transform data for Recharts

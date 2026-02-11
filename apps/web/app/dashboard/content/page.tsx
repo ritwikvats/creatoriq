@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
+import { api } from '@/lib/api-client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Library, Search, Filter, Youtube, Instagram, TrendingUp, Heart, MessageCircle, Eye, Calendar } from 'lucide-react';
 
@@ -39,24 +40,31 @@ export default function ContentLibraryPage() {
                 router.push('/login');
             } else {
                 setUser(user);
-                fetchAllContent(user.id);
+                fetchAllContent();
             }
         };
         getUser();
     }, [router, supabase]);
 
-    const fetchAllContent = async (userId: string) => {
+    const fetchAllContent = async () => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-            // Fetch YouTube videos
-            const ytResponse = await fetch(`${api_url}/youtube/stats/${userId}`);
-            const ytData = await ytResponse.json();
+            // Fetch YouTube videos (authenticated)
+            let ytData: any = {};
+            try {
+                ytData = await api.get('/youtube/stats');
+            } catch (err) {
+                console.log('YouTube data not available');
+            }
 
-            // Fetch Instagram posts
-            const igResponse = await fetch(`${api_url}/instagram/analytics/${userId}`);
-            const igData = await igResponse.json();
+            // Fetch Instagram posts (authenticated)
+            let igData: any = {};
+            try {
+                igData = await api.get('/instagram/analytics');
+            } catch (err) {
+                console.log('Instagram data not available');
+            }
 
             const allContent: ContentItem[] = [];
 

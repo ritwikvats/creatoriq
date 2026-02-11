@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { api } from '@/lib/api-client';
 import { Calculator, TrendingDown, AlertCircle, CheckCircle, IndianRupee } from 'lucide-react';
 
 export default function TaxCalculatorPage() {
@@ -20,25 +21,19 @@ export default function TaxCalculatorPage() {
     const handleCalculate = async () => {
         try {
             setLoading(true);
-            const api_url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-            const response = await fetch(`${api_url}/tax/calculate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    grossIncome: parseFloat(formData.grossIncome) || 0,
-                    deductions: {
-                        section80C: parseFloat(formData.section80C) || 0,
-                        section80D: parseFloat(formData.section80D) || 0,
-                        businessExpenses: parseFloat(formData.businessExpenses) || 0,
-                        equipmentPurchase: parseFloat(formData.equipmentPurchase) || 0,
-                    },
-                    tdsDeducted: parseFloat(formData.tdsDeducted) || 0,
-                    hasGSTRegistration: formData.hasGSTRegistration,
-                }),
+            const data = await api.post('/tax/calculate', {
+                grossIncome: parseFloat(formData.grossIncome) || 0,
+                deductions: {
+                    section80C: parseFloat(formData.section80C) || 0,
+                    section80D: parseFloat(formData.section80D) || 0,
+                    businessExpenses: parseFloat(formData.businessExpenses) || 0,
+                    equipmentPurchase: parseFloat(formData.equipmentPurchase) || 0,
+                },
+                tdsDeducted: parseFloat(formData.tdsDeducted) || 0,
+                hasGSTRegistration: formData.hasGSTRegistration,
             });
 
-            const data = await response.json();
             setResult(data);
         } catch (error) {
             console.error('Tax calculation failed:', error);
