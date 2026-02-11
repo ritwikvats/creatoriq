@@ -32,6 +32,7 @@ function DashboardContent() {
     const [loading, setLoading] = useState(true);
     const [youtubeConnected, setYoutubeConnected] = useState(false);
     const [youtubeData, setYoutubeData] = useState<any>(null);
+    const [instagramData, setInstagramData] = useState<any>(null);
     const [fetchingYouTube, setFetchingYouTube] = useState(false);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const router = useRouter();
@@ -79,6 +80,25 @@ function DashboardContent() {
             fetchYouTubeData();
         }
     }, [user, youtubeConnected]);
+
+    // Fetch Instagram data on load
+    useEffect(() => {
+        if (user) {
+            fetchInstagramData();
+        }
+    }, [user]);
+
+    const fetchInstagramData = async () => {
+        try {
+            const { api } = await import('@/lib/api-client');
+            const data = await api.get('/instagram/status');
+            if (data.connected) {
+                setInstagramData(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch Instagram data:', error);
+        }
+    };
 
     const fetchYouTubeData = async () => {
         if (!user) return;
@@ -162,16 +182,11 @@ function DashboardContent() {
                     <div className="lg:col-span-2 space-y-8">
                         {/* Stats Cards */}
                         <DashboardStats
-                            stats={youtubeData?.channel ? {
-                                subscribers: youtubeData.channel.subscriberCount,
-                                totalViews: youtubeData.channel.totalViews,
-                                monthlyRevenue: youtubeData.revenue || 0,
-                                engagementRate: youtubeData.analytics?.avgEngagementRate ?? 0,
-                            } : {
-                                subscribers: 0,
-                                totalViews: 0,
-                                monthlyRevenue: 0,
-                                engagementRate: 0
+                            stats={{
+                                subscribers: (youtubeData?.channel?.subscriberCount || 0) + (instagramData?.followers || 0),
+                                totalViews: youtubeData?.channel?.totalViews || 0,
+                                monthlyRevenue: youtubeData?.revenue || 0,
+                                engagementRate: youtubeData?.analytics?.avgEngagementRate ?? 0,
                             }}
                         />
 
