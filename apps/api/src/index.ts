@@ -77,6 +77,8 @@ app.use(cors({
     origin: [
         process.env.FRONTEND_URL || 'http://localhost:3000',
         'https://creatoriq-web.onrender.com',
+        'https://creatoriq.in',
+        'https://www.creatoriq.in',
         'http://localhost:3004',
         'http://localhost:3002',
     ],

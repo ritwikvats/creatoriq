@@ -36,13 +36,14 @@ export default function AnalyticsPage() {
         try {
             setLoading(true);
             const userId = '00000000-0000-0000-0000-000000000001'; // Test user
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
             // Fetch YouTube stats
-            const ytRes = await fetch(`http://localhost:3001/youtube/stats/${userId}`);
+            const ytRes = await fetch(`${apiUrl}/youtube/stats/${userId}`);
             const ytData = await ytRes.json();
 
             // Fetch Instagram status
-            const igRes = await fetch(`http://localhost:3001/instagram/status/${userId}`);
+            const igRes = await fetch(`${apiUrl}/instagram/status/${userId}`);
             const igData = await igRes.json();
 
             setStats({
@@ -239,7 +240,8 @@ export default function AnalyticsPage() {
                     <div className="flex gap-3">
                         <button
                             onClick={async () => {
-                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+                                const response = await fetch(`${apiUrl}/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
                                 const data = await response.json();
                                 const formatted = formatDataForExport('analytics', data.snapshots);
                                 exportAsCSV({ type: 'analytics', data: formatted, filename: 'analytics' });
@@ -250,7 +252,8 @@ export default function AnalyticsPage() {
                         </button>
                         <button
                             onClick={async () => {
-                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+                                const response = await fetch(`${apiUrl}/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
                                 const data = await response.json();
                                 const formatted = formatDataForExport('analytics', data.snapshots);
                                 exportAsPDF({ type: 'analytics', data: formatted, filename: 'analytics' });
@@ -261,7 +264,8 @@ export default function AnalyticsPage() {
                         </button>
                         <button
                             onClick={async () => {
-                                const response = await fetch(`http://localhost:3001/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
+                                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+                                const response = await fetch(`${apiUrl}/analytics/timeline/00000000-0000-0000-0000-000000000001?days=30`);
                                 const data = await response.json();
                                 const formatted = formatDataForExport('analytics', data.snapshots);
                                 exportAsJSON({ type: 'analytics', data: formatted, filename: 'analytics' });
