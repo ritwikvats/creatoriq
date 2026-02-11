@@ -250,6 +250,7 @@ class YouTubeService {
             // Fetch geography demographics (simpler, more likely to work)
             let geoData = [];
             try {
+                // Note: Don't use filters param - paramsSerializer double-encodes != operator
                 const geoResponse = await youtubeAnalytics.reports.query({
                     ids: `channel==${channelId}`,
                     startDate: formatDate(startDate),
@@ -258,9 +259,11 @@ class YouTubeService {
                     dimensions: 'country',
                     sort: '-views',
                     maxResults: 10,
-                    filters: 'country!=ZZ' // Exclude unknown countries
                 });
-                geoData = (geoResponse.data.rows || []).map((row) => ({
+                // Filter out unknown country (ZZ) client-side instead
+                geoData = (geoResponse.data.rows || [])
+                    .filter((row) => row[0] !== 'ZZ')
+                    .map((row) => ({
                     country: row[0],
                     views: row[1]
                 }));
@@ -271,6 +274,8 @@ class YouTubeService {
             // Try to fetch age and gender demographics (requires YPP)
             let ageGenderData = [];
             try {
+                // Note: demographics require country filter for YouTube Analytics API
+                // Using requestBody to avoid paramsSerializer double-encoding the == operator
                 const ageGenderResponse = await youtubeAnalytics.reports.query({
                     ids: `channel==${channelId}`,
                     startDate: formatDate(startDate),
@@ -278,7 +283,6 @@ class YouTubeService {
                     metrics: 'viewerPercentage',
                     dimensions: 'ageGroup,gender',
                     sort: '-viewerPercentage',
-                    filters: 'country==US' // Demographics usually require country filter
                 });
                 ageGenderData = (ageGenderResponse.data.rows || []).map((row) => ({
                     ageGroup: row[0],
@@ -331,6 +335,15 @@ class YouTubeService {
             const videos = response.data.items || [];
             // Get detailed stats for each video
             const videoIds = videos.map(v => v.id?.videoId).filter(Boolean);
+            // Guard: if no videos found, return early
+            if (videoIds.length === 0) {
+                return {
+                    bestDays: [],
+                    bestHours: [],
+                    recommendation: 'No videos found to analyze - upload some content first!',
+                    videosAnalyzed: 0
+                };
+            }
             const statsResponse = await youtube.videos.list({
                 part: ['statistics', 'snippet'],
                 id: videoIds
