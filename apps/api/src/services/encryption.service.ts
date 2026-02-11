@@ -142,8 +142,5 @@ export const encryptionService = new EncryptionService();
 
 // Helper function to generate encryption key for .env
 export function generateEncryptionKey(): string {
-    const key = EncryptionService.generateKey();
-    console.log('\n🔑 Generated Encryption Key (add to .env):');
-    console.log(`ENCRYPTION_KEY=${key}\n`);
-    return key;
+    return EncryptionService.generateKey();
 }

@@ -96,7 +96,7 @@ export class RevenueService {
     /**
      * Update an existing revenue entry
      */
-    async updateRevenue(id: string, updates: any) {
+    async updateRevenue(id: string, userId: string, updates: any) {
         const { data, error } = await supabase
             .from('revenue_entries')
             .update({
@@ -104,10 +104,12 @@ export class RevenueService {
                 updated_at: new Date().toISOString(),
             })
             .eq('id', id)
+            .eq('user_id', userId)
             .select()
             .single();
 
         if (error) throw error;
+        if (!data) throw new Error('Revenue entry not found or access denied');
         return data;
     }
 

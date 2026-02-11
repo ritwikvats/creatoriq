@@ -44,7 +44,8 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     const userId = req.user!.id;
 
     try {
-        const revenue = await revenueService.updateRevenue(id, { ...req.body, user_id: userId });
+        const { user_id: _, ...safeUpdates } = req.body; // Strip user_id from body
+        const revenue = await revenueService.updateRevenue(id, userId, safeUpdates);
         res.json({ revenue });
     } catch (error: any) {
         console.error('Update revenue error:', error);

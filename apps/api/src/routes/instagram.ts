@@ -12,7 +12,10 @@ router.get('/auth', requireAuth, (req, res, next) => {
         const userId = req.user!.id;
 
         // Generate signed state token to prevent CSRF and account linking attacks
-        const secret = process.env.JWT_SECRET || 'fallback-secret';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not configured');
+        }
         const expiry = Date.now() + 10 * 60 * 1000; // 10 min
         const payload = `${userId}:instagram:${expiry}`;
         const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
@@ -48,7 +51,8 @@ router.get('/callback', async (req, res) => {
         // Verify signed state token to prevent CSRF/account linking attacks
         let userId: string;
         try {
-            const secret = process.env.JWT_SECRET || 'fallback-secret';
+            const secret = process.env.JWT_SECRET;
+            if (!secret) throw new Error('JWT_SECRET not configured');
             const decoded = Buffer.from(state as string, 'base64url').toString();
             const parts = decoded.split(':');
             if (parts.length !== 4) throw new Error('Invalid state format');
@@ -56,7 +60,7 @@ router.get('/callback', async (req, res) => {
             if (purpose !== 'instagram') throw new Error('Wrong purpose');
             if (Date.now() > parseInt(expiry)) throw new Error('State expired');
             const expected = crypto.createHmac('sha256', secret).update(`${uid}:${purpose}:${expiry}`).digest('hex');
-            if (sig !== expected) throw new Error('Invalid signature');
+            if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) throw new Error('Invalid signature');
             userId = uid;
         } catch (err) {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3004';
