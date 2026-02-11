@@ -129,26 +129,55 @@ router.post('/chat', requireAuth, async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        const systemPrompt = `You are an expert creator growth consultant for CreatorIQ. You have access to the user's real analytics data.
+        // Build analytics context with clear labels
+        let dataBlock = '';
+        if (analytics) {
+            const ig = analytics.instagram;
+            const yt = analytics.youtube;
+            const parts: string[] = [];
 
-RESPONSE RULES:
-- Be specific, actionable, and use their real numbers
-- When asked to do something (rewrite captions, build a plan), DO IT immediately
+            if (ig) {
+                parts.push(`INSTAGRAM (@${ig.username || 'connected'}):
+- Followers: ${ig.followers?.toLocaleString() || 0}
+- Posts: ${ig.posts || 0}
+- Engagement Rate: ${ig.engagementRate || 0}%
+- Avg Likes/Post: ${ig.avgLikes || 0}
+- Avg Comments/Post: ${ig.avgComments || 0}`);
+            }
+
+            if (yt) {
+                parts.push(`YOUTUBE (${yt.channelName || 'connected'}):
+- Subscribers: ${yt.subscribers?.toLocaleString() || 0}
+- Total Views: ${yt.totalViews?.toLocaleString() || 0}
+- Total Videos: ${yt.totalVideos || 0}`);
+            }
+
+            if (parts.length > 0) {
+                dataBlock = `\n\n=== USER'S REAL ANALYTICS (USE THESE NUMBERS) ===\n${parts.join('\n\n')}\n=== END ANALYTICS ===`;
+            }
+        }
+
+        const systemPrompt = `You are the user's personal creator growth consultant inside CreatorIQ. You ALREADY have their real analytics data below — use it in every response.
+
+CRITICAL RULES:
+- You ALREADY know their username, followers, engagement, everything. NEVER ask for their handle or more data.
+- NEVER say "drop your handle" or "send me your data" — you have it all.
+- Jump straight into actionable advice using their REAL numbers.
+- When asked to do something (rewrite captions, build a plan, hashtags), DO IT immediately. Don't describe what you would do — actually do it.
+- Reference their specific metrics: "Your ${analytics?.instagram ? analytics.instagram.followers + ' followers' : 'account'}" not "your followers"
+
+FORMAT RULES:
 - Use ## for section headers, ### for sub-sections
-- Use **bold** for key terms and numbers
-- Use tables with | for structured data (calendars, plans, comparisons)
-- Use - bullets for lists, 1. 2. 3. for steps
-- Add blank lines between sections for readability
-- Keep each section focused and scannable`;
-
-        const analyticsContext = analytics
-            ? `\n\nUser's current analytics data:\n${JSON.stringify(analytics, null, 2)}`
-            : '';
+- Use **bold** for key numbers and important terms
+- Use tables with | for calendars, plans, comparisons
+- Use - bullets for lists, 1. 2. 3. for ordered steps
+- Add blank lines between sections
+- Keep it scannable — no walls of text${dataBlock}`;
 
         const messages: Array<{role: string, content: string}> = [
             {
                 role: 'system',
-                content: systemPrompt + analyticsContext
+                content: systemPrompt
             },
             ...(history || []).map((msg: {role: string, content: string}) => ({
                 role: msg.role,
