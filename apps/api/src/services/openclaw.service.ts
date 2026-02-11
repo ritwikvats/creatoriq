@@ -101,43 +101,28 @@ ${analytics.instagram.topPosts?.map((post: any, i: number) =>
 - Avg Views per Video: ${Math.round(analytics.youtube.totalViews / analytics.youtube.totalVideos).toLocaleString()}
 ` : 'YouTube: Not connected';
 
-        const prompt = `You are an expert creator growth consultant analyzing REAL performance data. Generate beautiful, actionable insights that help the creator make data-driven decisions.
+        const prompt = `You are a creator growth consultant. Analyze this REAL data and give concise, actionable insights.
 
-# CREATOR DATA:
 ${instagramContext}
 ${youtubeContext}
 
-# YOUR TASK:
-Analyze this data and provide insights in a BEAUTIFUL, ENGAGING format using:
-- 📊 Emojis for visual appeal
-- **Bold** for key metrics and takeaways
-- Bullet points for easy scanning
-- Specific numbers from their data
-- Industry benchmarks for comparison
-- Clear next actions
+Write a SHORT, scannable analysis (max 250 words). Use this exact format:
 
-# FORMAT YOUR RESPONSE LIKE THIS:
+## 📈 Overview
+2-3 sentences comparing their metrics to industry benchmarks. Use specific numbers.
 
-## 📈 Performance Overview
-[Compare their metrics to industry standards with specific numbers]
+## 🎯 Strengths
+- One or two things working well (with data)
 
-## 🎯 Key Strengths (What's Working)
-- [Specific strength with data]
-- [Another strength with numbers]
+## ⚠️ Improve
+- One or two areas that need work (current vs ideal)
 
-## ⚠️ Growth Opportunities (What Needs Attention)
-- [Specific area with current vs ideal metrics]
-- [Another opportunity with actionable advice]
+## 💡 Action Items
+1. [Most important action] — expected result
+2. [Second action] — expected result
+3. [Third action] — expected result
 
-## 💡 Top 3 Action Items
-1. **[Action]:** [Why + Expected outcome with numbers]
-2. **[Action]:** [Why + Expected outcome]
-3. **[Action]:** [Why + Expected outcome]
-
-## 🚀 30-Day Goal
-[One specific, measurable goal based on their current numbers]
-
-Make it HUMAN, ACTIONABLE, and backed by their REAL DATA. No generic advice!`;
+Rules: Be specific with their numbers. No filler. No generic advice. Keep it short.`;
 
         try {
             const response = await this.makeRequest('/chat/completions', {
@@ -145,7 +130,7 @@ Make it HUMAN, ACTIONABLE, and backed by their REAL DATA. No generic advice!`;
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are an expert social media analytics consultant specializing in creator growth and monetization.'
+                        content: 'You are a concise social media analytics consultant. Keep responses under 250 words. Use markdown formatting with emojis for section headers only.'
                     },
                     {
                         role: 'user',
@@ -153,7 +138,7 @@ Make it HUMAN, ACTIONABLE, and backed by their REAL DATA. No generic advice!`;
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 1000,
+                max_tokens: 500,
             });
 
             return response.choices?.[0]?.message?.content || 'Unable to generate insights';

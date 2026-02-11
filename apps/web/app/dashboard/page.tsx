@@ -182,17 +182,7 @@ function DashboardContent() {
                     {/* Sidebar Area */}
                     <div className="space-y-8">
                         {/* AI Insights Card */}
-                        <AIInsights analytics={youtubeData?.channel ? {
-                            subscribers: youtubeData.channel.subscriberCount,
-                            views: youtubeData.channel.totalViews,
-                            engagement: youtubeData.analytics?.avgEngagementRate ?? 0,
-                            revenue: youtubeData.revenue || 0
-                        } : {
-                            subscribers: 0,
-                            views: 0,
-                            engagement: 0,
-                            revenue: 0
-                        }} />
+                        <AIInsights />
 
                         {/* Recent Videos List */}
                         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">

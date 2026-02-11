@@ -1,19 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, TrendingUp, DollarSign, Lightbulb } from 'lucide-react';
+import { Sparkles, TrendingUp, DollarSign, Lightbulb, RefreshCw } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api-client';
 
-interface AIInsightsProps {
-    analytics?: {
-        views?: number;
-        engagement?: number;
-        subscribers?: number;
-        revenue?: number;
-    };
-}
-
-export default function AIInsights({ analytics }: AIInsightsProps) {
+export default function AIInsights() {
     const [insights, setInsights] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
@@ -23,7 +15,7 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
         setError('');
 
         try {
-            // Fetch real analytics data from all connected platforms using authenticated api client
+            // Fetch real analytics data from connected platforms
             let instagramData = null;
             try {
                 instagramData = await api.get('/instagram/analytics');
@@ -33,31 +25,30 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
 
             let youtubeData = null;
             try {
-                youtubeData = await api.get('/youtube/analytics');
+                youtubeData = await api.get('/youtube/stats');
             } catch (err) {
                 console.log('YouTube data not available');
             }
 
-            // Combine all analytics data
+            // Map data correctly from API response structures
             const comprehensiveAnalytics = {
                 instagram: instagramData?.account ? {
-                    followers: instagramData.account?.followers_count || 0,
-                    posts: instagramData.account?.media_count || 0,
-                    engagementRate: instagramData.account?.engagement_rate || 0,
-                    avgLikes: Math.round(instagramData.account?.avg_likes || 0),
-                    avgComments: Math.round(instagramData.account?.avg_comments || 0),
+                    followers: instagramData.account.followers_count || 0,
+                    posts: instagramData.account.media_count || 0,
+                    engagementRate: instagramData.account.engagement_rate || instagramData.stats?.engagement_rate || 0,
+                    avgLikes: Math.round(instagramData.account.avg_likes || 0),
+                    avgComments: Math.round(instagramData.account.avg_comments || 0),
                     topPosts: instagramData.topPosts?.slice(0, 3) || [],
-                    username: instagramData.account?.username || ''
+                    username: instagramData.account.username || ''
                 } : null,
-                youtube: youtubeData?.channelStats ? {
-                    subscribers: youtubeData.channelStats?.subscriberCount || 0,
-                    totalViews: youtubeData.channelStats?.totalViews || 0,
-                    totalVideos: youtubeData.channelStats?.totalVideos || 0,
-                    channelName: youtubeData.channelStats?.channelName || ''
+                youtube: youtubeData?.channel ? {
+                    subscribers: youtubeData.channel.subscriberCount || 0,
+                    totalViews: youtubeData.channel.totalViews || 0,
+                    totalVideos: youtubeData.channel.totalVideos || 0,
+                    channelName: youtubeData.channel.channelName || ''
                 } : null
             };
 
-            // Generate AI insights with comprehensive data
             const data = await api.post('/ai/insights', { analytics: comprehensiveAnalytics });
             setInsights(data.insights);
         } catch (err: any) {
@@ -108,10 +99,14 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
 
             {insights && (
                 <div className="bg-white rounded-lg p-5 shadow-md">
-                    <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-wrap text-dark-700 leading-relaxed">
-                            {insights}
-                        </div>
+                    <div className="ai-insights-content prose prose-sm max-w-none
+                        prose-headings:text-dark-800 prose-headings:font-bold prose-headings:mt-4 prose-headings:mb-2
+                        prose-h2:text-base prose-h2:border-b prose-h2:border-gray-100 prose-h2:pb-1
+                        prose-p:text-dark-600 prose-p:leading-relaxed prose-p:my-1
+                        prose-li:text-dark-600 prose-li:my-0.5
+                        prose-strong:text-dark-800
+                        prose-ul:my-1 prose-ol:my-1">
+                        <ReactMarkdown>{insights}</ReactMarkdown>
                     </div>
 
                     <button
@@ -119,7 +114,7 @@ export default function AIInsights({ analytics }: AIInsightsProps) {
                         disabled={loading}
                         className="mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
                     >
-                        <Sparkles className="w-4 h-4" />
+                        <RefreshCw className="w-4 h-4" />
                         Regenerate Insights
                     </button>
                 </div>
