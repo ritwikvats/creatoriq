@@ -118,21 +118,19 @@ FORMAT (use ## for section headers ONLY, NO other markdown):
 ## 30-Day Goal
 One sentence with a specific number target.
 
-CRITICAL FORMATTING RULES:
-- Use ## for section headers (exactly as shown above)
-- NEVER use ** for bold. NEVER use *** or ### or any other markdown
-- Just write plain text with - for bullets and 1. 2. 3. for numbered lists
-- Keep each bullet to ONE short line
-- MAX 2-3 bullets per section
-- No paragraphs, no walls of text
-- Use their real numbers`;
+CRITICAL RULES:
+- EVERY section MUST start with ## followed by the header (e.g. ## Performance Overview)
+- No ** bold, no ### sub-headers, no backticks
+- Plain text with - bullets and 1. 2. 3. numbered lists
+- Each bullet = ONE short line, MAX 2-3 per section
+- Use their real numbers, no fluff`;
         try {
             const response = await this.makeRequest('/chat/completions', {
                 model: FUELIX_MODEL,
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a concise creator growth consultant. Write plain text only. NEVER use markdown bold (**), NEVER use ### headers. Only use ## for section headers and - for bullets. Keep everything short and scannable.'
+                        content: 'You are a concise creator growth consultant. You MUST start each section with ## (e.g. "## Performance Overview"). Use - for bullets and 1. 2. 3. for numbered lists. Do NOT use ** bold or ### sub-headers. Keep everything short and scannable.'
                     },
                     {
                         role: 'user',

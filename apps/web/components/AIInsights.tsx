@@ -45,26 +45,77 @@ function cleanMarkdown(text: string): string {
         .trim();
 }
 
-function parseInsightsIntoSections(markdown: string): InsightSection[] {
+// Known section header patterns to detect even without ## prefix
+const KNOWN_SECTIONS = [
+    /performance\s*overview/i,
+    /key\s*strengths?/i,
+    /growth\s*opportunit/i,
+    /action\s*items?/i,
+    /recommendations?/i,
+    /\d+-day\s*goal/i,
+    /monthly?\s*goal/i,
+];
+
+function isSectionHeader(line: string): boolean {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.length > 50) return false;
+    return KNOWN_SECTIONS.some(pattern => pattern.test(trimmed));
+}
+
+function parseInsightsIntoSections(text: string): InsightSection[] {
     const sections: InsightSection[] = [];
-    const parts = markdown.split(/^## /m).filter(Boolean);
 
-    for (const part of parts) {
-        const lines = part.trim().split('\n');
-        const titleLine = lines[0] || '';
-        const content = cleanMarkdown(lines.slice(1).join('\n').trim());
+    // Try splitting by ## headers first
+    const parts = text.split(/^## /m).filter(Boolean);
 
-        // Clean emoji from title
-        const cleanTitle = titleLine.replace(/^[^\w]*/, '').trim();
+    if (parts.length > 1) {
+        // AI used ## headers — parse normally
+        for (const part of parts) {
+            const lines = part.trim().split('\n');
+            const titleLine = lines[0] || '';
+            const content = cleanMarkdown(lines.slice(1).join('\n').trim());
+            const cleanTitle = titleLine.replace(/^[^\w]*/, '').trim();
 
-        if (cleanTitle && content) {
-            sections.push({
-                icon: titleLine.match(/[\p{Emoji}]/u)?.[0] || '',
-                title: cleanTitle,
-                content,
-                color: '',
-            });
+            if (cleanTitle && content) {
+                sections.push({ icon: '', title: cleanTitle, content, color: '' });
+            }
         }
+        return sections;
+    }
+
+    // Fallback: detect sections by known header keywords
+    const lines = text.split('\n');
+    let currentTitle = '';
+    let currentLines: string[] = [];
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        // Check if line is a section header (known keyword, no bullet prefix)
+        if (isSectionHeader(trimmed) && !trimmed.startsWith('-') && !trimmed.startsWith('*') && !/^\d+[\.\)]/.test(trimmed)) {
+            // Save previous section
+            if (currentTitle && currentLines.length > 0) {
+                sections.push({
+                    icon: '',
+                    title: currentTitle,
+                    content: cleanMarkdown(currentLines.join('\n').trim()),
+                    color: '',
+                });
+            }
+            currentTitle = cleanMarkdown(trimmed);
+            currentLines = [];
+        } else if (trimmed) {
+            currentLines.push(line);
+        }
+    }
+
+    // Save last section
+    if (currentTitle && currentLines.length > 0) {
+        sections.push({
+            icon: '',
+            title: currentTitle,
+            content: cleanMarkdown(currentLines.join('\n').trim()),
+            color: '',
+        });
     }
 
     return sections;
