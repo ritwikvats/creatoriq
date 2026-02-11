@@ -34,6 +34,33 @@ router.post('/insights', requireAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/ai/analytics-report
+ * Generate structured analytics report (JSON) for Weekly Report card
+ */
+router.post('/analytics-report', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const { analytics } = req.body;
+
+        if (!analytics) {
+            return res.status(400).json({ error: 'Analytics data is required' });
+        }
+
+        const report = await aiService.generateAnalyticsReport(analytics);
+
+        res.json({
+            success: true,
+            report
+        });
+    } catch (error: any) {
+        console.error('Analytics Report API Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to generate analytics report'
+        });
+    }
+});
+
+/**
  * POST /api/ai/categorize-tax
  * Categorize revenue for tax purposes
  */

@@ -366,6 +366,83 @@ Provide the complete script with setup instructions.`;
         }
     }
     /**
+     * Generate structured analytics report (JSON) for the Weekly Report card
+     */
+    async generateAnalyticsReport(analytics) {
+        const instagramContext = analytics.instagram ? `
+Instagram (@${analytics.instagram.username}):
+- Followers: ${analytics.instagram.followers}
+- Posts: ${analytics.instagram.posts}
+- Engagement Rate: ${analytics.instagram.engagementRate}%
+- Avg Likes: ${analytics.instagram.avgLikes}
+- Avg Comments: ${analytics.instagram.avgComments}` : 'Instagram: Not connected';
+        const youtubeContext = analytics.youtube ? `
+YouTube (${analytics.youtube.channelName}):
+- Subscribers: ${analytics.youtube.subscribers}
+- Total Views: ${analytics.youtube.totalViews}
+- Total Videos: ${analytics.youtube.totalVideos}` : 'YouTube: Not connected';
+        const prompt = `Analyze this creator's data and return ONLY valid JSON (no markdown, no code fences).
+
+DATA:
+${instagramContext}
+${youtubeContext}
+
+Return this exact JSON structure:
+{
+  "growthScore": <number 1-10>,
+  "statInsights": {
+    "totalFollowers": "<one short sentence about their follower count>",
+    "youtubeViews": "<one short sentence about their views>",
+    "contentCreated": "<one short sentence about their content volume>"
+  },
+  "platformNudges": {
+    "youtube": "<one actionable tip for YouTube>",
+    "instagram": "<one actionable tip for Instagram>"
+  },
+  "whatsWorking": [
+    "<strength 1 with specific number>",
+    "<strength 2 with specific number>"
+  ],
+  "needsAttention": [
+    "<issue 1 with specific metric>",
+    "<issue 2 with specific metric>"
+  ],
+  "weeklyAction": "<the single most impactful thing to do this week>",
+  "goalText": "<specific measurable goal for end of month>"
+}
+
+RULES:
+- Use their REAL numbers, not placeholders
+- Each insight must be under 80 characters
+- Be specific and actionable, not generic
+- If a platform is not connected, say "Connect [platform] to unlock growth"
+- Growth score: 1-3 = struggling, 4-6 = building, 7-8 = growing well, 9-10 = crushing it`;
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a creator analytics engine. Return ONLY valid JSON. No markdown, no explanations, no code fences. Just the JSON object.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.5,
+                max_tokens: 800,
+            });
+            const content = response.choices?.[0]?.message?.content || '{}';
+            // Strip any markdown code fences if present
+            const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            return JSON.parse(cleaned);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    /**
      * Generate technical content suggestions for tech creators
      */
     async generateTechnicalContent(topic, targetAudience) {

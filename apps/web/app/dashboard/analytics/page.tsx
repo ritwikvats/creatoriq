@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase';
 import { api } from '@/lib/api-client';
 import DashboardLayout from '@/components/DashboardLayout';
 import GrowthStats from '@/components/GrowthStats';
-import ReactMarkdown from 'react-markdown';
+import WeeklyReport from '@/components/WeeklyReport';
 import {
     Download, RefreshCw, Youtube, Instagram, Users, Eye, FileText,
-    Sparkles, TrendingUp, BarChart3, CheckCircle2, XCircle
+    Sparkles, TrendingUp, BarChart3, CheckCircle2, XCircle, Zap
 } from 'lucide-react';
 import { exportAsCSV, exportAsJSON, exportAsPDF, formatDataForExport } from '@/lib/export-utils';
 
@@ -53,9 +53,7 @@ function AnalyticsContent() {
     });
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [aiSummary, setAiSummary] = useState('');
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiError, setAiError] = useState('');
+    const [reportInsights, setReportInsights] = useState<any>(null);
     const router = useRouter();
     const supabase = createClient();
 
@@ -123,45 +121,6 @@ function AnalyticsContent() {
         setRefreshing(true);
         await fetchAllStats();
         setRefreshing(false);
-    };
-
-    const generateAISummary = async () => {
-        setAiLoading(true);
-        setAiError('');
-        try {
-            // Gather real analytics data
-            let instagramAnalytics = null;
-            try {
-                instagramAnalytics = await api.get('/instagram/analytics');
-            } catch (err) {
-                console.log('Instagram analytics not available');
-            }
-
-            const comprehensiveAnalytics = {
-                instagram: instagramAnalytics?.account ? {
-                    followers: instagramAnalytics.account.followers_count || 0,
-                    posts: instagramAnalytics.account.media_count || 0,
-                    engagementRate: instagramAnalytics.account.engagement_rate || instagramAnalytics.stats?.engagement_rate || 0,
-                    avgLikes: Math.round(instagramAnalytics.account.avg_likes || 0),
-                    avgComments: Math.round(instagramAnalytics.account.avg_comments || 0),
-                    topPosts: instagramAnalytics.topPosts?.slice(0, 3) || [],
-                    username: instagramAnalytics.account.username || ''
-                } : null,
-                youtube: stats.youtube.connected ? {
-                    subscribers: stats.youtube.subscribers || 0,
-                    totalViews: stats.youtube.views || 0,
-                    totalVideos: stats.youtube.videos || 0,
-                    channelName: stats.youtube.channelName || ''
-                } : null
-            };
-
-            const data = await api.post('/ai/insights', { analytics: comprehensiveAnalytics });
-            setAiSummary(data.insights);
-        } catch (err: any) {
-            setAiError(err.message || 'Failed to generate AI summary');
-        } finally {
-            setAiLoading(false);
-        }
     };
 
     const handleExport = async (format: 'csv' | 'pdf' | 'json') => {
@@ -255,7 +214,7 @@ function AnalyticsContent() {
                     </div>
                 </div>
 
-                {/* Overall Stats Cards */}
+                {/* Overall Stats Cards with AI Context Chips */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -266,6 +225,12 @@ function AnalyticsContent() {
                         <h3 className="text-3xl font-bold text-dark-800">{totalFollowers.toLocaleString()}</h3>
                         <p className="text-sm text-dark-600 mt-1">Total Followers</p>
                         <p className="text-xs text-dark-400 mt-1">Across all platforms</p>
+                        {reportInsights?.statInsights?.totalFollowers && (
+                            <div className="mt-3 flex items-start gap-1.5 px-2.5 py-1.5 bg-primary-50 rounded-lg">
+                                <Sparkles className="w-3.5 h-3.5 text-primary-500 mt-0.5 shrink-0" />
+                                <p className="text-xs text-primary-700 leading-relaxed">{reportInsights.statInsights.totalFollowers}</p>
+                            </div>
+                        )}
                     </div>
                     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -276,6 +241,12 @@ function AnalyticsContent() {
                         <h3 className="text-3xl font-bold text-dark-800">{(stats.youtube.views || 0).toLocaleString()}</h3>
                         <p className="text-sm text-dark-600 mt-1">YouTube Views</p>
                         <p className="text-xs text-dark-400 mt-1">Total video views</p>
+                        {reportInsights?.statInsights?.youtubeViews && (
+                            <div className="mt-3 flex items-start gap-1.5 px-2.5 py-1.5 bg-red-50 rounded-lg">
+                                <Sparkles className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
+                                <p className="text-xs text-red-700 leading-relaxed">{reportInsights.statInsights.youtubeViews}</p>
+                            </div>
+                        )}
                     </div>
                     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -286,6 +257,12 @@ function AnalyticsContent() {
                         <h3 className="text-3xl font-bold text-dark-800">{totalContent.toLocaleString()}</h3>
                         <p className="text-sm text-dark-600 mt-1">Content Created</p>
                         <p className="text-xs text-dark-400 mt-1">Videos + Posts</p>
+                        {reportInsights?.statInsights?.contentCreated && (
+                            <div className="mt-3 flex items-start gap-1.5 px-2.5 py-1.5 bg-purple-50 rounded-lg">
+                                <Sparkles className="w-3.5 h-3.5 text-purple-500 mt-0.5 shrink-0" />
+                                <p className="text-xs text-purple-700 leading-relaxed">{reportInsights.statInsights.contentCreated}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -326,6 +303,12 @@ function AnalyticsContent() {
                                         <p className="text-xs text-dark-500 mt-1">Videos</p>
                                     </div>
                                 </div>
+                                {reportInsights?.platformNudges?.youtube && (
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+                                        <Zap className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                                        <p className="text-xs text-amber-800 leading-relaxed">{reportInsights.platformNudges.youtube}</p>
+                                    </div>
+                                )}
                                 <a
                                     href="/dashboard/youtube"
                                     className="block text-center bg-red-600 text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition-colors font-medium"
@@ -375,6 +358,12 @@ function AnalyticsContent() {
                                         <p className="text-xs text-dark-500 mt-1">Posts</p>
                                     </div>
                                 </div>
+                                {reportInsights?.platformNudges?.instagram && (
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-orange-50 border border-orange-200 rounded-xl">
+                                        <Zap className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
+                                        <p className="text-xs text-orange-800 leading-relaxed">{reportInsights.platformNudges.instagram}</p>
+                                    </div>
+                                )}
                                 <a
                                     href="/dashboard/instagram"
                                     className="block text-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors font-medium"
@@ -394,71 +383,12 @@ function AnalyticsContent() {
                     </div>
                 </div>
 
-                {/* AI Analytics Summary */}
-                <div className="bg-gradient-to-br from-primary-50 to-purple-50 rounded-2xl p-6 shadow-md border border-primary-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="w-6 h-6 text-primary-600" />
-                            <h2 className="text-xl font-bold text-dark-800">AI Analytics Summary</h2>
-                        </div>
-                        <span className="text-xs font-semibold px-3 py-1 bg-gradient-to-r from-purple-600 to-primary-600 text-white rounded-full shadow-lg">
-                            Powered by GPT-5.2
-                        </span>
-                    </div>
-
-                    {!aiSummary && !aiLoading && (
-                        <div>
-                            <p className="text-dark-600 mb-4">Get an AI-powered analysis of your cross-platform performance with actionable growth recommendations.</p>
-                            <button
-                                onClick={generateAISummary}
-                                disabled={aiLoading || connectedCount === 0}
-                                className="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                <Sparkles className="w-5 h-5" />
-                                {connectedCount === 0 ? 'Connect a platform first' : 'Generate AI Analysis'}
-                            </button>
-                        </div>
-                    )}
-
-                    {aiLoading && (
-                        <div className="text-center py-8">
-                            <div className="animate-spin h-8 w-8 border-4 border-primary-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-                            <p className="text-dark-600 animate-pulse">AI is analyzing your cross-platform data...</p>
-                        </div>
-                    )}
-
-                    {aiSummary && (
-                        <div className="bg-white rounded-xl p-5 shadow-sm">
-                            <div className="ai-insights-content prose prose-sm max-w-none
-                                prose-headings:text-dark-800 prose-headings:font-bold prose-headings:mt-4 prose-headings:mb-2
-                                prose-h2:text-base prose-h2:border-b prose-h2:border-gray-100 prose-h2:pb-1
-                                prose-p:text-dark-600 prose-p:leading-relaxed prose-p:my-1
-                                prose-li:text-dark-600 prose-li:my-0.5
-                                prose-strong:text-dark-800
-                                prose-ul:my-1 prose-ol:my-1">
-                                <ReactMarkdown>{aiSummary}</ReactMarkdown>
-                            </div>
-                            <button
-                                onClick={generateAISummary}
-                                disabled={aiLoading}
-                                className="mt-4 text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                                Regenerate Analysis
-                            </button>
-                        </div>
-                    )}
-
-                    {aiError && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
-                            <p className="font-medium">Error:</p>
-                            <p className="text-sm">{aiError}</p>
-                            <button onClick={generateAISummary} className="mt-2 text-red-600 hover:text-red-700 font-medium text-sm">
-                                Try Again
-                            </button>
-                        </div>
-                    )}
-                </div>
+                {/* Weekly Performance Report */}
+                <WeeklyReport
+                    analytics={stats}
+                    connectedCount={connectedCount}
+                    onReportLoaded={(report) => setReportInsights(report)}
+                />
 
                 {/* Growth Trends */}
                 <div>

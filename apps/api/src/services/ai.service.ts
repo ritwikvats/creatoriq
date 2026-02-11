@@ -189,6 +189,59 @@ export const aiService = {
     },
 
     /**
+     * Generate structured analytics report (JSON)
+     * Primary: OpenClaw | Fallback: Groq
+     */
+    async generateAnalyticsReport(analytics: any): Promise<any> {
+        // Try OpenClaw first
+        if (openClawService.isAvailable()) {
+            try {
+                apiLogger.info('Using OpenClaw for analytics report');
+                return await openClawService.generateAnalyticsReport(analytics);
+            } catch (error) {
+                apiLogger.warn('OpenClaw failed for analytics report, falling back to Groq', { error });
+            }
+        }
+
+        // Fallback to Groq
+        try {
+            apiLogger.info('Using Groq (fallback) for analytics report');
+            const groq = getGroqClient();
+
+            const igCtx = analytics.instagram
+                ? `Instagram (@${analytics.instagram.username}): ${analytics.instagram.followers} followers, ${analytics.instagram.posts} posts, ${analytics.instagram.engagementRate}% engagement, ${analytics.instagram.avgLikes} avg likes, ${analytics.instagram.avgComments} avg comments`
+                : 'Instagram: Not connected';
+
+            const ytCtx = analytics.youtube
+                ? `YouTube (${analytics.youtube.channelName}): ${analytics.youtube.subscribers} subscribers, ${analytics.youtube.totalViews} views, ${analytics.youtube.totalVideos} videos`
+                : 'YouTube: Not connected';
+
+            const completion = await groq.chat.completions.create({
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a creator analytics engine. Return ONLY valid JSON. No markdown, no explanations, no code fences.'
+                    },
+                    {
+                        role: 'user',
+                        content: `Analyze this creator data and return JSON with these fields: growthScore (1-10), statInsights (totalFollowers, youtubeViews, contentCreated - each a short string), platformNudges (youtube, instagram - each a short tip), whatsWorking (array of 2 strengths), needsAttention (array of 2 issues), weeklyAction (string), goalText (string). Use real numbers from data.\n\n${igCtx}\n${ytCtx}`
+                    }
+                ],
+                model: 'llama-3.3-70b-versatile',
+                temperature: 0.5,
+                max_tokens: 800,
+                response_format: { type: 'json_object' },
+            });
+
+            const content = completion.choices[0]?.message?.content || '{}';
+            return JSON.parse(content);
+        } catch (error) {
+            console.error('Analytics Report Error:', error);
+            throw new Error('Failed to generate analytics report');
+        }
+    },
+
+    /**
      * Analyze revenue trends and provide financial advice
      * Primary: OpenClaw | Fallback: Groq
      */
