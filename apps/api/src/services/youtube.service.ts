@@ -117,6 +117,10 @@ class YouTubeService {
             const stats = channel.statistics;
             const snippet = channel.snippet;
 
+            // Debug: log raw YouTube API response for stats
+            console.log('📺 YouTube raw statistics:', JSON.stringify(stats));
+            console.log('📺 hiddenSubscriberCount:', stats?.hiddenSubscriberCount);
+
             return {
                 channelId: channel.id || '',
                 channelName: snippet?.title || 'Unknown',

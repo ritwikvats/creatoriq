@@ -202,9 +202,13 @@ router.get('/stats', requireAuth, async (req, res, next) => {
 
         // Fetch latest channel stats
         const channelStats = await youtubeService.getChannelStats(accessToken);
+        console.log('📺 YouTube /stats response - subscribers:', channelStats.subscriberCount,
+            'views:', channelStats.totalViews, 'videos:', channelStats.totalVideos,
+            'channel:', channelStats.channelName);
 
         // Fetch recent videos
         const recentVideos = await youtubeService.getRecentVideos(accessToken, channelStats.channelId, 10);
+        console.log('📺 Recent videos count:', recentVideos.length);
 
         // Fetch estimated revenue
         const estimatedRevenue = await youtubeService.getChannelRevenue(accessToken, channelStats.channelId);
