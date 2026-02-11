@@ -17,6 +17,73 @@ interface AIChatPanelProps {
     initialMessage?: string;
 }
 
+// Custom markdown components for beautiful rendering
+const markdownComponents = {
+    h1: ({ children }: any) => (
+        <h1 className="text-base font-bold text-dark-900 mt-4 mb-2 pb-1 border-b border-gray-200">{children}</h1>
+    ),
+    h2: ({ children }: any) => (
+        <div className="flex items-center gap-2 mt-5 mb-2">
+            <div className="w-1 h-5 bg-gradient-to-b from-primary-500 to-purple-500 rounded-full"></div>
+            <h2 className="text-sm font-bold text-dark-900">{children}</h2>
+        </div>
+    ),
+    h3: ({ children }: any) => (
+        <h3 className="text-xs font-bold text-dark-800 mt-3 mb-1.5 uppercase tracking-wide">{children}</h3>
+    ),
+    p: ({ children }: any) => (
+        <p className="text-xs text-dark-700 leading-relaxed my-1.5">{children}</p>
+    ),
+    strong: ({ children }: any) => (
+        <strong className="font-semibold text-dark-900">{children}</strong>
+    ),
+    ul: ({ children }: any) => (
+        <ul className="space-y-1 my-2">{children}</ul>
+    ),
+    ol: ({ children }: any) => (
+        <ol className="space-y-1.5 my-2 counter-reset-list">{children}</ol>
+    ),
+    li: ({ children, ordered }: any) => (
+        <li className="flex items-start gap-2 text-xs text-dark-700 leading-relaxed">
+            <span className="mt-1.5 w-1 h-1 rounded-full bg-primary-400 flex-shrink-0"></span>
+            <span>{children}</span>
+        </li>
+    ),
+    table: ({ children }: any) => (
+        <div className="my-3 overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-xs">{children}</table>
+        </div>
+    ),
+    thead: ({ children }: any) => (
+        <thead className="bg-gradient-to-r from-primary-50 to-purple-50">{children}</thead>
+    ),
+    tbody: ({ children }: any) => (
+        <tbody className="divide-y divide-gray-100">{children}</tbody>
+    ),
+    tr: ({ children }: any) => (
+        <tr className="hover:bg-gray-50 transition-colors">{children}</tr>
+    ),
+    th: ({ children }: any) => (
+        <th className="px-3 py-2 text-left text-[10px] font-bold text-primary-700 uppercase tracking-wider whitespace-nowrap">{children}</th>
+    ),
+    td: ({ children }: any) => (
+        <td className="px-3 py-2 text-xs text-dark-700 leading-relaxed">{children}</td>
+    ),
+    hr: () => (
+        <hr className="my-3 border-gray-100" />
+    ),
+    blockquote: ({ children }: any) => (
+        <blockquote className="border-l-3 border-primary-300 bg-primary-50/50 pl-3 py-1.5 my-2 rounded-r-lg text-xs text-dark-600 italic">
+            {children}
+        </blockquote>
+    ),
+    code: ({ inline, children }: any) => (
+        inline
+            ? <code className="text-primary-700 bg-primary-50 px-1 py-0.5 rounded text-[11px] font-mono">{children}</code>
+            : <pre className="bg-dark-800 text-green-300 rounded-lg p-3 my-2 overflow-x-auto text-[11px] font-mono leading-relaxed">{children}</pre>
+    ),
+};
+
 export default function AIChatPanel({ isOpen, onClose, analytics, initialMessage }: AIChatPanelProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -139,20 +206,16 @@ export default function AIChatPanel({ isOpen, onClose, analytics, initialMessage
                                     <Bot className="w-4 h-4 text-white" />
                                 </div>
                             )}
-                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                            <div className={`rounded-2xl px-4 py-3 ${
                                 msg.role === 'user'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'bg-gray-50 border border-gray-100'
+                                    ? 'max-w-[85%] bg-primary-600 text-white'
+                                    : 'max-w-[92%] bg-white border border-gray-200 shadow-sm'
                             }`}>
                                 {msg.role === 'assistant' ? (
-                                    <div className="prose prose-sm max-w-none
-                                        prose-headings:text-dark-800 prose-headings:font-bold prose-headings:mt-2 prose-headings:mb-1 prose-headings:text-sm
-                                        prose-p:text-dark-700 prose-p:my-1 prose-p:text-sm prose-p:leading-relaxed
-                                        prose-li:text-dark-700 prose-li:text-sm prose-li:my-0
-                                        prose-strong:text-dark-800
-                                        prose-ul:my-1 prose-ol:my-1
-                                        prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded">
-                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                    <div className="ai-chat-content">
+                                        <ReactMarkdown components={markdownComponents}>
+                                            {msg.content}
+                                        </ReactMarkdown>
                                     </div>
                                 ) : (
                                     <p className="text-sm">{msg.content}</p>
@@ -171,10 +234,10 @@ export default function AIChatPanel({ isOpen, onClose, analytics, initialMessage
                             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-purple-500 flex items-center justify-center flex-shrink-0">
                                 <Bot className="w-4 h-4 text-white" />
                             </div>
-                            <div className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl px-4 py-3">
                                 <div className="flex items-center gap-2 text-dark-500 text-sm">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Thinking...
+                                    <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+                                    <span className="text-xs">Analyzing your data...</span>
                                 </div>
                             </div>
                         </div>

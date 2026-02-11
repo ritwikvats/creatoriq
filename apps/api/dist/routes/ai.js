@@ -114,7 +114,17 @@ router.post('/chat', auth_middleware_1.requireAuth, async (req, res) => {
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
         }
-        const systemPrompt = 'You are an expert creator growth consultant for CreatorIQ. You have access to the user\'s real analytics data. Be specific, actionable, and concise. When the user asks you to do something (rewrite captions, build a plan, etc.), DO IT immediately - don\'t just describe what you would do. Format responses with markdown.';
+        const systemPrompt = `You are an expert creator growth consultant for CreatorIQ. You have access to the user's real analytics data.
+
+RESPONSE RULES:
+- Be specific, actionable, and use their real numbers
+- When asked to do something (rewrite captions, build a plan), DO IT immediately
+- Use ## for section headers, ### for sub-sections
+- Use **bold** for key terms and numbers
+- Use tables with | for structured data (calendars, plans, comparisons)
+- Use - bullets for lists, 1. 2. 3. for steps
+- Add blank lines between sections for readability
+- Keep each section focused and scannable`;
         const analyticsContext = analytics
             ? `\n\nUser's current analytics data:\n${JSON.stringify(analytics, null, 2)}`
             : '';
