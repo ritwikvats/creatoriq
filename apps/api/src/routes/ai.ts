@@ -118,6 +118,54 @@ router.post('/analyze-revenue', requireAuth, async (req: Request, res: Response)
 });
 
 /**
+ * POST /api/ai/chat
+ * Interactive AI chat with analytics context
+ */
+router.post('/chat', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const { message, history, analytics } = req.body;
+
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        const systemPrompt = 'You are an expert creator growth consultant for CreatorIQ. You have access to the user\'s real analytics data. Be specific, actionable, and concise. When the user asks you to do something (rewrite captions, build a plan, etc.), DO IT immediately - don\'t just describe what you would do. Format responses with markdown.';
+
+        const analyticsContext = analytics
+            ? `\n\nUser's current analytics data:\n${JSON.stringify(analytics, null, 2)}`
+            : '';
+
+        const messages: Array<{role: string, content: string}> = [
+            {
+                role: 'system',
+                content: systemPrompt + analyticsContext
+            },
+            ...(history || []).map((msg: {role: string, content: string}) => ({
+                role: msg.role,
+                content: msg.content
+            })),
+            {
+                role: 'user',
+                content: message
+            }
+        ];
+
+        const reply = await aiService.chat(messages);
+
+        res.json({
+            success: true,
+            reply
+        });
+    } catch (error: any) {
+        console.error('Chat API Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to generate chat response'
+        });
+    }
+});
+
+/**
  * GET /api/ai/status
  * Check AI service status
  */

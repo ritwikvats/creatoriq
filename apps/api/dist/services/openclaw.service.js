@@ -343,6 +343,24 @@ Provide the complete script with setup instructions.`;
         }
     }
     /**
+     * Chat with the AI - general conversational endpoint
+     * Used by the interactive chat feature
+     */
+    async chat(messages) {
+        try {
+            const response = await this.makeRequest('/chat/completions', {
+                model: FUELIX_MODEL,
+                messages,
+                temperature: 0.7,
+                max_tokens: 1500,
+            });
+            return response.choices?.[0]?.message?.content || 'No response generated';
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+    /**
      * Generate technical content suggestions for tech creators
      */
     async generateTechnicalContent(topic, targetAudience) {

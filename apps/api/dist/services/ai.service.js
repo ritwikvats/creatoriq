@@ -150,6 +150,38 @@ exports.aiService = {
         }
     },
     /**
+     * Chat with the AI - general conversational endpoint
+     * Primary: OpenClaw | Fallback: Groq
+     */
+    async chat(messages) {
+        // Try OpenClaw first (primary provider)
+        if (openclaw_service_1.openClawService.isAvailable()) {
+            try {
+                logger_service_1.apiLogger.info('Using OpenClaw for chat');
+                return await openclaw_service_1.openClawService.chat(messages);
+            }
+            catch (error) {
+                logger_service_1.apiLogger.warn('OpenClaw chat failed, falling back to Groq', { error });
+            }
+        }
+        // Fallback to Groq
+        try {
+            logger_service_1.apiLogger.info('Using Groq (fallback) for chat');
+            const groq = getGroqClient();
+            const completion = await groq.chat.completions.create({
+                messages: messages,
+                model: 'llama-3.3-70b-versatile',
+                temperature: 0.7,
+                max_tokens: 1500,
+            });
+            return completion.choices[0]?.message?.content || 'Unable to generate response';
+        }
+        catch (error) {
+            console.error('Chat Error:', error);
+            throw new Error('Failed to generate chat response');
+        }
+    },
+    /**
      * Analyze revenue trends and provide financial advice
      * Primary: OpenClaw | Fallback: Groq
      */
