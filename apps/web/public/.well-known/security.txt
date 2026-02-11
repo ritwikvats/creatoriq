@@ -1,0 +1,3 @@
+Contact: mailto:support@creatoriq.com
+Preferred-Languages: en
+Canonical: https://creatoriq.in/.well-known/security.txt

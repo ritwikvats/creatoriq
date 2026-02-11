@@ -108,14 +108,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         name: 'CreatorIQ API',
-        version: '0.1.0',
-        endpoints: {
-            health: '/health',
-            auth: '/auth/*',
-            youtube: '/youtube/*',
-            instagram: '/instagram/*',
-            revenue: '/revenue/*',
-        },
+        status: 'operational',
     });
 });
 

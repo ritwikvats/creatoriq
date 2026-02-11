@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /api
+Disallow: /_next
+
+Sitemap: https://creatoriq.in/sitemap.xml
