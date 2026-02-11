@@ -86,7 +86,7 @@ class RevenueService {
     /**
      * Update an existing revenue entry
      */
-    async updateRevenue(id, updates) {
+    async updateRevenue(id, userId, updates) {
         const { data, error } = await supabase_service_1.supabase
             .from('revenue_entries')
             .update({
@@ -94,20 +94,24 @@ class RevenueService {
             updated_at: new Date().toISOString(),
         })
             .eq('id', id)
+            .eq('user_id', userId)
             .select()
             .single();
         if (error)
             throw error;
+        if (!data)
+            throw new Error('Revenue entry not found or access denied');
         return data;
     }
     /**
-     * Delete a revenue entry
+     * Delete a revenue entry (with user ownership verification)
      */
-    async deleteRevenue(id) {
+    async deleteRevenue(id, userId) {
         const { error } = await supabase_service_1.supabase
             .from('revenue_entries')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId); // Ensure user owns this entry
         if (error)
             throw error;
         return true;

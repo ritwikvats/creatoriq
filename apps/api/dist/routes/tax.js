@@ -75,7 +75,7 @@ router.get('/updates', async (req, res) => {
     }
 });
 // Calculate tax liability
-router.post('/calculate', (req, res) => {
+router.post('/calculate', auth_middleware_1.requireAuth, (req, res) => {
     try {
         const result = tax_calculator_service_1.taxCalculatorService.calculateTax(req.body);
         res.json(result);
@@ -86,7 +86,7 @@ router.post('/calculate', (req, res) => {
     }
 });
 // Calculate advance tax installments
-router.post('/advance-tax', (req, res) => {
+router.post('/advance-tax', auth_middleware_1.requireAuth, (req, res) => {
     try {
         const { annualTax } = req.body;
         const installments = tax_calculator_service_1.taxCalculatorService.calculateAdvanceTax(annualTax);
@@ -97,7 +97,7 @@ router.post('/advance-tax', (req, res) => {
     }
 });
 // Calculate tax liability for annual income
-router.post('/liability', async (req, res) => {
+router.post('/liability', auth_middleware_1.requireAuth, async (req, res) => {
     const { annualIncome } = req.body;
     if (!annualIncome || annualIncome <= 0) {
         return res.status(400).json({ error: 'Valid annual income required' });
@@ -111,7 +111,7 @@ router.post('/liability', async (req, res) => {
     }
 });
 // Get personalized AI-powered tax advice
-router.post('/advice', async (req, res) => {
+router.post('/advice', auth_middleware_1.requireAuth, async (req, res) => {
     const { annualIncome, revenueBreakdown, expenses } = req.body;
     if (!annualIncome) {
         return res.status(400).json({ error: 'Annual income required' });
@@ -132,8 +132,8 @@ router.post('/advice', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-// Sync tax rules with latest government updates (called by cron)
-router.post('/sync', async (req, res) => {
+// Sync tax rules with latest government updates (called by cron or admin)
+router.post('/sync', auth_middleware_1.requireAuth, async (req, res) => {
     try {
         await taxUpdatesService.syncTaxRules();
         res.json({

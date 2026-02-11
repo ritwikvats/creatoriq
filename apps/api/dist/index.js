@@ -104,13 +104,18 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 // Middleware
+const corsOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://creatoriq-web.onrender.com',
+    'https://creatoriq.in',
+    'https://www.creatoriq.in',
+];
+// Only allow localhost in development
+if (process.env.NODE_ENV !== 'production') {
+    corsOrigins.push('http://localhost:3004', 'http://localhost:3002');
+}
 app.use((0, cors_1.default)({
-    origin: [
-        process.env.FRONTEND_URL || 'http://localhost:3000',
-        'https://creatoriq-web.onrender.com',
-        'http://localhost:3004',
-        'http://localhost:3002',
-    ],
+    origin: corsOrigins,
     credentials: true,
 }));
 app.use(express_1.default.json());
@@ -131,14 +136,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         name: 'CreatorIQ API',
-        version: '0.1.0',
-        endpoints: {
-            health: '/health',
-            auth: '/auth/*',
-            youtube: '/youtube/*',
-            instagram: '/instagram/*',
-            revenue: '/revenue/*',
-        },
+        status: 'operational',
     });
 });
 // Import rate limiters

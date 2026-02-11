@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const ai_service_1 = require("../services/ai.service");
-const openclaw_service_1 = require("../services/openclaw.service");
+const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 /**
  * POST /api/ai/insights
  * Generate AI-powered insights from analytics data
  */
-router.post('/insights', async (req, res) => {
+router.post('/insights', auth_middleware_1.requireAuth, async (req, res) => {
     try {
         const { analytics } = req.body;
         if (!analytics) {
@@ -33,7 +33,7 @@ router.post('/insights', async (req, res) => {
  * POST /api/ai/categorize-tax
  * Categorize revenue for tax purposes
  */
-router.post('/categorize-tax', async (req, res) => {
+router.post('/categorize-tax', auth_middleware_1.requireAuth, async (req, res) => {
     try {
         const { description, amount } = req.body;
         if (!description || !amount) {
@@ -58,7 +58,7 @@ router.post('/categorize-tax', async (req, res) => {
  * POST /api/ai/content-ideas
  * Generate viral content ideas
  */
-router.post('/content-ideas', async (req, res) => {
+router.post('/content-ideas', auth_middleware_1.requireAuth, async (req, res) => {
     try {
         const { niche, recentTopics } = req.body;
         if (!niche) {
@@ -83,7 +83,7 @@ router.post('/content-ideas', async (req, res) => {
  * POST /api/ai/analyze-revenue
  * Analyze revenue trends and provide financial advice
  */
-router.post('/analyze-revenue', async (req, res) => {
+router.post('/analyze-revenue', auth_middleware_1.requireAuth, async (req, res) => {
     try {
         const { revenueHistory } = req.body;
         if (!revenueHistory || !Array.isArray(revenueHistory)) {
@@ -108,28 +108,10 @@ router.post('/analyze-revenue', async (req, res) => {
  * GET /api/ai/status
  * Check AI service status
  */
-router.get('/status', (req, res) => {
-    const openClawAvailable = openclaw_service_1.openClawService.isAvailable();
+router.get('/status', auth_middleware_1.requireAuth, (req, res) => {
     res.json({
         success: true,
         status: 'operational',
-        primaryProvider: openClawAvailable ? 'Fuelix (OpenClaw)' : 'Groq (Fallback)',
-        providers: {
-            fuelix: {
-                available: openClawAvailable,
-                models: ['gpt-5.2-chat-2025-12-11', 'gpt-5-mini-2025-08-07']
-            },
-            groq: {
-                available: true,
-                models: ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant']
-            }
-        },
-        models: {
-            insights: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)',
-            categorization: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-8b-instant (Groq)',
-            contentGeneration: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)',
-            revenueAnalysis: openClawAvailable ? 'gpt-5.2-chat-2025-12-11 (Fuelix)' : 'llama-3.1-70b-versatile (Groq)'
-        }
     });
 });
 exports.default = router;

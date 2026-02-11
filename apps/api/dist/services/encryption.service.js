@@ -19,14 +19,18 @@ class EncryptionService {
     constructor() {
         // Get encryption key from environment variable
         const key = process.env.ENCRYPTION_KEY;
+        const salt = process.env.ENCRYPTION_SALT || 'creatoriq-platform-salt-v1';
         if (!key) {
-            console.warn('⚠️ ENCRYPTION_KEY not set in environment. Using fallback (NOT SECURE FOR PRODUCTION)');
-            // Fallback for development - MUST be replaced in production
-            this.encryptionKey = crypto_1.default.scryptSync('creatoriq-dev-key', 'salt', KEY_LENGTH);
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error('ENCRYPTION_KEY environment variable is required in production');
+            }
+            // Development only: generate a random key per session (tokens won't persist across restarts)
+            console.warn('⚠️ ENCRYPTION_KEY not set. Using random key (dev only, tokens will not persist)');
+            this.encryptionKey = crypto_1.default.randomBytes(KEY_LENGTH);
         }
         else {
-            // Derive key from environment variable
-            this.encryptionKey = crypto_1.default.scryptSync(key, 'salt', KEY_LENGTH);
+            // Derive key from environment variable with proper salt
+            this.encryptionKey = crypto_1.default.scryptSync(key, salt, KEY_LENGTH);
         }
     }
     /**
@@ -128,8 +132,5 @@ exports.EncryptionService = EncryptionService;
 exports.encryptionService = new EncryptionService();
 // Helper function to generate encryption key for .env
 function generateEncryptionKey() {
-    const key = EncryptionService.generateKey();
-    console.log('\n🔑 Generated Encryption Key (add to .env):');
-    console.log(`ENCRYPTION_KEY=${key}\n`);
-    return key;
+    return EncryptionService.generateKey();
 }

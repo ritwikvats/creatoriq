@@ -37,7 +37,8 @@ router.put('/:id', auth_middleware_1.requireAuth, async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
     try {
-        const revenue = await revenue_service_1.revenueService.updateRevenue(id, { ...req.body, user_id: userId });
+        const { user_id: _, ...safeUpdates } = req.body; // Strip user_id from body
+        const revenue = await revenue_service_1.revenueService.updateRevenue(id, userId, safeUpdates);
         res.json({ revenue });
     }
     catch (error) {
@@ -45,12 +46,12 @@ router.put('/:id', auth_middleware_1.requireAuth, async (req, res, next) => {
         next(error);
     }
 });
-// Delete revenue entry
+// Delete revenue entry (with ownership check)
 router.delete('/:id', auth_middleware_1.requireAuth, async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
     try {
-        await revenue_service_1.revenueService.deleteRevenue(id);
+        await revenue_service_1.revenueService.deleteRevenue(id, userId);
         res.json({ message: 'Revenue entry deleted successfully' });
     }
     catch (error) {

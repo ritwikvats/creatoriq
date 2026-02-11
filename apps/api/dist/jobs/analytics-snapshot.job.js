@@ -96,9 +96,10 @@ async function captureYouTubeSnapshot(platform) {
         const channelStats = await youtubeService.getChannelAnalytics(platform.access_token);
         const recentVideos = await youtubeService.getVideoPerformance(platform.access_token, 10);
         // Calculate engagement metrics
-        const totalViews = recentVideos.reduce((sum, video) => sum + parseInt(video.viewCount || '0'), 0);
-        const totalLikes = recentVideos.reduce((sum, video) => sum + parseInt(video.likeCount || '0'), 0);
-        const totalComments = recentVideos.reduce((sum, video) => sum + parseInt(video.commentCount || '0'), 0);
+        // Note: youtube service returns { views, likes, comments } as numbers
+        const totalViews = recentVideos.reduce((sum, video) => sum + (video.views || 0), 0);
+        const totalLikes = recentVideos.reduce((sum, video) => sum + (video.likes || 0), 0);
+        const totalComments = recentVideos.reduce((sum, video) => sum + (video.comments || 0), 0);
         const avgEngagementRate = recentVideos.length > 0 && channelStats.subscriberCount > 0
             ? ((totalLikes + totalComments) / recentVideos.length / parseInt(String(channelStats.subscriberCount || '0'))) * 100
             : 0;

@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const crypto_1 = __importDefault(require("crypto"));
 const youtube_service_1 = require("../services/youtube.service");
 const supabase_service_1 = require("../services/supabase.service");
 const auth_middleware_1 = require("../middleware/auth.middleware");
@@ -13,11 +17,17 @@ const router = (0, express_1.Router)();
 router.get('/auth', auth_middleware_1.requireAuth, async (req, res, next) => {
     try {
         const userId = req.user.id;
-        // Generate OAuth URL with state parameter
+        // Generate signed state token to prevent CSRF and account linking attacks
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+        const expiry = Date.now() + 10 * 60 * 1000; // 10 min
+        const payload = `${userId}:youtube:${expiry}`;
+        const signature = crypto_1.default.createHmac('sha256', secret).update(payload).digest('hex');
+        const stateToken = Buffer.from(`${payload}:${signature}`).toString('base64url');
         const authUrl = youtube_service_1.youtubeService.getAuthUrl();
-        const urlWithState = `${authUrl}&state=${userId}`;
-        // Return the OAuth URL instead of redirecting
-        // This allows the frontend to handle the redirect with proper auth headers
+        const urlWithState = `${authUrl}&state=${stateToken}`;
         res.json({ authUrl: urlWithState });
     }
     catch (error) {
@@ -31,12 +41,35 @@ router.get('/auth', auth_middleware_1.requireAuth, async (req, res, next) => {
  */
 router.get('/callback', async (req, res) => {
     const { code, state } = req.query;
-    const userId = state;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3004';
     if (!code) {
-        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?error=no_code`);
+        return res.redirect(`${frontendUrl}/dashboard?error=no_code`);
     }
-    if (!userId) {
-        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?error=no_user`);
+    if (!state) {
+        return res.redirect(`${frontendUrl}/dashboard?error=no_state`);
+    }
+    // Verify the signed state token to prevent CSRF/account linking attacks
+    let userId;
+    try {
+        const secret = process.env.JWT_SECRET;
+        if (!secret)
+            throw new Error('JWT_SECRET not configured');
+        const decoded = Buffer.from(state, 'base64url').toString();
+        const parts = decoded.split(':');
+        if (parts.length !== 4)
+            throw new Error('Invalid state format');
+        const [uid, purpose, expiry, sig] = parts;
+        if (purpose !== 'youtube')
+            throw new Error('Wrong purpose');
+        if (Date.now() > parseInt(expiry))
+            throw new Error('State expired');
+        const expected = crypto_1.default.createHmac('sha256', secret).update(`${uid}:${purpose}:${expiry}`).digest('hex');
+        if (!crypto_1.default.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)))
+            throw new Error('Invalid signature');
+        userId = uid;
+    }
+    catch (err) {
+        return res.redirect(`${frontendUrl}/dashboard?error=invalid_state`);
     }
     try {
         // Exchange authorization code for tokens
@@ -48,7 +81,7 @@ router.get('/callback', async (req, res) => {
         const channelStats = await youtube_service_1.youtubeService.getChannelStats(tokens.access_token);
         // Get user email
         const userInfo = await youtube_service_1.youtubeService.getUserInfo(tokens.access_token);
-        // Save to Supabase connected_platforms table
+        // Save to Supabase connected_platforms table (with token encryption)
         const supabase = (0, supabase_service_1.getSupabaseClient)();
         // 🔍 ENSURE USER EXISTS IN OUR USERS TABLE FIRST
         // This fixes the foreign key violation for users missing from public.users
@@ -65,40 +98,39 @@ router.get('/callback', async (req, res) => {
                 full_name: userInfo.name || 'Anonymous Creator',
             });
         }
-        const { error } = await supabase
-            .from('connected_platforms')
-            .upsert({
-            user_id: userId,
-            platform: 'youtube',
-            platform_user_id: channelStats.channelId,
-            platform_username: channelStats.channelName,
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token || null,
-            token_expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
-            last_synced_at: new Date().toISOString(),
-        }, {
-            onConflict: 'user_id,platform',
-        });
-        if (error) {
-            console.error('Supabase error:', error);
-            throw new Error(`Database error: ${error.message}`);
+        // Use saveConnectedPlatform which encrypts access tokens before saving
+        try {
+            await (0, supabase_service_1.saveConnectedPlatform)({
+                user_id: userId,
+                platform: 'youtube',
+                platform_user_id: channelStats.channelId,
+                platform_username: channelStats.channelName,
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token || null,
+                token_expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+                last_synced_at: new Date().toISOString(),
+            });
+        }
+        catch (saveError) {
+            console.error('Supabase error:', saveError);
+            throw new Error(`Database error: ${saveError.message}`);
         }
         // Save initial analytics snapshot
-        const { error: snapshotError } = await supabase
-            .from('analytics_snapshots')
-            .insert({
-            user_id: userId,
-            platform: 'youtube',
-            snapshot_date: new Date().toISOString().split('T')[0],
-            metrics: {
-                subscribers: channelStats.subscriberCount,
-                views: channelStats.totalViews,
-                videos: channelStats.totalVideos,
-                channelName: channelStats.channelName,
-            },
-        });
-        if (snapshotError) {
-            console.warn('Failed to save analytics snapshot:', snapshotError);
+        try {
+            await (0, supabase_service_1.saveAnalyticsSnapshot)({
+                user_id: userId,
+                platform: 'youtube',
+                snapshot_date: new Date().toISOString().split('T')[0],
+                metrics: {
+                    subscribers: channelStats.subscriberCount,
+                    views: channelStats.totalViews,
+                    videos: channelStats.totalVideos,
+                    channelName: channelStats.channelName,
+                },
+            });
+        }
+        catch (snapshotError) {
+            console.warn('Failed to save analytics snapshot:', snapshotError.message);
             // Don't fail the whole flow if snapshot fails
         }
         // Redirect to dashboard with success message

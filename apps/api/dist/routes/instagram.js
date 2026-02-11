@@ -32,8 +32,12 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const crypto_1 = __importDefault(require("crypto"));
 const instagramService = __importStar(require("../services/instagram.service"));
 const supabase_service_1 = require("../services/supabase.service");
 const auth_middleware_1 = require("../middleware/auth.middleware");
@@ -42,7 +46,16 @@ const router = (0, express_1.Router)();
 router.get('/auth', auth_middleware_1.requireAuth, (req, res, next) => {
     try {
         const userId = req.user.id;
-        const authUrl = instagramService.getAuthUrl(userId);
+        // Generate signed state token to prevent CSRF and account linking attacks
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+        const expiry = Date.now() + 10 * 60 * 1000; // 10 min
+        const payload = `${userId}:instagram:${expiry}`;
+        const signature = crypto_1.default.createHmac('sha256', secret).update(payload).digest('hex');
+        const stateToken = Buffer.from(`${payload}:${signature}`).toString('base64url');
+        const authUrl = instagramService.getAuthUrl(stateToken);
         res.json({ authUrl });
     }
     catch (error) {
@@ -64,10 +77,29 @@ router.get('/callback', async (req, res) => {
         if (!igAccountId) {
             throw new Error('No Instagram Business Account found');
         }
-        // Get user ID from state parameter (passed through OAuth flow)
-        const userId = state || req.query.userId;
-        if (!userId) {
-            throw new Error('No user ID provided in OAuth state');
+        // Verify signed state token to prevent CSRF/account linking attacks
+        let userId;
+        try {
+            const secret = process.env.JWT_SECRET;
+            if (!secret)
+                throw new Error('JWT_SECRET not configured');
+            const decoded = Buffer.from(state, 'base64url').toString();
+            const parts = decoded.split(':');
+            if (parts.length !== 4)
+                throw new Error('Invalid state format');
+            const [uid, purpose, expiry, sig] = parts;
+            if (purpose !== 'instagram')
+                throw new Error('Wrong purpose');
+            if (Date.now() > parseInt(expiry))
+                throw new Error('State expired');
+            const expected = crypto_1.default.createHmac('sha256', secret).update(`${uid}:${purpose}:${expiry}`).digest('hex');
+            if (!crypto_1.default.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)))
+                throw new Error('Invalid signature');
+            userId = uid;
+        }
+        catch (err) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3004';
+            return res.redirect(`${frontendUrl}/dashboard?error=invalid_state`);
         }
         // Get account insights
         const { account, insights } = await instagramService.getAccountInsights(accessToken, igAccountId);
@@ -267,17 +299,36 @@ router.get('/debug', auth_middleware_1.requireAuth, async (req, res, next) => {
         catch (err) {
             facebookPages = [{ error: err.response?.data || err.message }];
         }
-        // 3. Try to fetch demographics (this will show if permissions are missing)
+        // 3. Try to fetch demographics using v22.0 API (follower_demographics with breakdowns)
         let demographicsTest = { success: false, error: '', data: null };
         try {
-            const demoResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+            // v22.0 requires separate calls per breakdown
+            const countryResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
                 params: {
-                    metric: 'audience_city,audience_country,audience_gender_age',
+                    metric: 'follower_demographics',
                     period: 'lifetime',
+                    breakdown: 'country',
+                    metric_type: 'total_value',
                     access_token: platform.access_token,
                 }
             });
-            demographicsTest = { success: true, error: '', data: demoResponse.data };
+            const ageGenderResponse = await axios.get(`${INSTAGRAM_API_BASE}/${platform.platform_user_id}/insights`, {
+                params: {
+                    metric: 'follower_demographics',
+                    period: 'lifetime',
+                    breakdown: 'age,gender',
+                    metric_type: 'total_value',
+                    access_token: platform.access_token,
+                }
+            });
+            demographicsTest = {
+                success: true,
+                error: '',
+                data: {
+                    country: countryResponse.data,
+                    ageGender: ageGenderResponse.data,
+                }
+            };
         }
         catch (err) {
             demographicsTest = {
