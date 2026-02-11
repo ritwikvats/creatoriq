@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { youtubeService } from '../services/youtube.service';
 import { getSupabaseClient, saveConnectedPlatform, saveAnalyticsSnapshot } from '../services/supabase.service';
+import { encryptionService } from '../services/encryption.service';
 import { requireAuth } from '../middleware/auth.middleware';
 import { APIError } from '../middleware/error-handler';
 
@@ -172,24 +173,25 @@ router.get('/stats', requireAuth, async (req, res, next) => {
             });
         }
 
-        // Check if token is still valid or needs refresh
-        let accessToken = platform.access_token;
+        // Decrypt tokens from database
+        let accessToken = encryptionService.safeDecrypt(platform.access_token);
+        const refreshToken = platform.refresh_token ? encryptionService.safeDecrypt(platform.refresh_token) : null;
 
         if (platform.token_expires_at) {
             const expiryTime = new Date(platform.token_expires_at).getTime();
             const now = Date.now();
 
             // Refresh if token expires in less than 5 minutes
-            if (expiryTime - now < 5 * 60 * 1000 && platform.refresh_token) {
+            if (expiryTime - now < 5 * 60 * 1000 && refreshToken) {
                 try {
-                    const newTokens = await youtubeService.refreshAccessToken(platform.refresh_token);
+                    const newTokens = await youtubeService.refreshAccessToken(refreshToken);
                     accessToken = newTokens.access_token || accessToken;
 
-                    // Update tokens in database
+                    // Update encrypted tokens in database
                     await supabase
                         .from('connected_platforms')
                         .update({
-                            access_token: newTokens.access_token,
+                            access_token: encryptionService.encrypt(newTokens.access_token!),
                             token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
                         })
                         .eq('id', platform.id);

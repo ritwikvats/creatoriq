@@ -7,6 +7,7 @@ const express_1 = require("express");
 const crypto_1 = __importDefault(require("crypto"));
 const youtube_service_1 = require("../services/youtube.service");
 const supabase_service_1 = require("../services/supabase.service");
+const encryption_service_1 = require("../services/encryption.service");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 /**
@@ -162,21 +163,22 @@ router.get('/stats', auth_middleware_1.requireAuth, async (req, res, next) => {
                 connected: false,
             });
         }
-        // Check if token is still valid or needs refresh
-        let accessToken = platform.access_token;
+        // Decrypt tokens from database
+        let accessToken = encryption_service_1.encryptionService.safeDecrypt(platform.access_token);
+        const refreshToken = platform.refresh_token ? encryption_service_1.encryptionService.safeDecrypt(platform.refresh_token) : null;
         if (platform.token_expires_at) {
             const expiryTime = new Date(platform.token_expires_at).getTime();
             const now = Date.now();
             // Refresh if token expires in less than 5 minutes
-            if (expiryTime - now < 5 * 60 * 1000 && platform.refresh_token) {
+            if (expiryTime - now < 5 * 60 * 1000 && refreshToken) {
                 try {
-                    const newTokens = await youtube_service_1.youtubeService.refreshAccessToken(platform.refresh_token);
+                    const newTokens = await youtube_service_1.youtubeService.refreshAccessToken(refreshToken);
                     accessToken = newTokens.access_token || accessToken;
-                    // Update tokens in database
+                    // Update encrypted tokens in database
                     await supabase
                         .from('connected_platforms')
                         .update({
-                        access_token: newTokens.access_token,
+                        access_token: encryption_service_1.encryptionService.encrypt(newTokens.access_token),
                         token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
                     })
                         .eq('id', platform.id);

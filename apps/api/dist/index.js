@@ -187,4 +187,3 @@ app.listen(PORT, () => {
     (0, cron_service_1.initializeCronJobs)();
 });
 exports.default = app;
-// deploy trigger 1770827849

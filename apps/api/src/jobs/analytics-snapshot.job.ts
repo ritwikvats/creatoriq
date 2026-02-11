@@ -1,6 +1,7 @@
 import * as youtubeService from '../services/youtube.service';
 import * as instagramService from '../services/instagram.service';
 import { getSupabaseClient, saveAnalyticsSnapshot } from '../services/supabase.service';
+import { encryptionService } from '../services/encryption.service';
 
 /**
  * Fetch and save analytics snapshots for all connected platforms
@@ -62,10 +63,36 @@ async function captureYouTubeSnapshot(platform: any) {
     console.log(`🎥 Capturing YouTube snapshot for ${platform.platform_username}...`);
 
     try {
-        // Fetch current YouTube stats
-        const channelStats = await youtubeService.getChannelAnalytics(platform.access_token);
+        // Decrypt tokens from database
+        let accessToken = encryptionService.safeDecrypt(platform.access_token);
+        const refreshToken = platform.refresh_token ? encryptionService.safeDecrypt(platform.refresh_token) : null;
 
-        const recentVideos = await youtubeService.getVideoPerformance(platform.access_token, 10);
+        // Try to refresh token if we have a refresh_token
+        if (refreshToken) {
+            try {
+                const ytModule = await import('../services/youtube.service');
+                const newTokens = await ytModule.youtubeService.refreshAccessToken(refreshToken);
+                if (newTokens.access_token) {
+                    accessToken = newTokens.access_token;
+                    // Update encrypted token in database
+                    const supabase = getSupabaseClient();
+                    await supabase
+                        .from('connected_platforms')
+                        .update({
+                            access_token: encryptionService.encrypt(newTokens.access_token),
+                            token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
+                        })
+                        .eq('id', platform.id);
+                }
+            } catch (refreshErr: any) {
+                console.warn(`⚠️ Token refresh failed for ${platform.platform_username}, using existing token`);
+            }
+        }
+
+        // Fetch current YouTube stats
+        const channelStats = await youtubeService.getChannelAnalytics(accessToken);
+
+        const recentVideos = await youtubeService.getVideoPerformance(accessToken, 10);
 
         // Calculate engagement metrics
         // Note: youtube service returns { views, likes, comments } as numbers
@@ -110,14 +137,17 @@ async function captureInstagramSnapshot(platform: any) {
     console.log(`📸 Capturing Instagram snapshot for ${platform.platform_username}...`);
 
     try {
+        // Decrypt token from database
+        const accessToken = encryptionService.safeDecrypt(platform.access_token);
+
         // Fetch current Instagram stats
         const { account, insights } = await instagramService.getAccountInsights(
-            platform.access_token,
+            accessToken,
             platform.platform_user_id
         );
 
         const media = await instagramService.getMediaPerformance(
-            platform.access_token,
+            accessToken,
             platform.platform_user_id,
             20
         );

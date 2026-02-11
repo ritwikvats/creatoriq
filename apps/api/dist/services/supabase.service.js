@@ -57,7 +57,7 @@ const getConnectedPlatform = async (userId, platform) => {
         .single();
     if (error)
         throw error;
-    // Decrypt access token before returning (with backward compatibility)
+    // Decrypt tokens before returning (with backward compatibility)
     if (data && data.access_token) {
         try {
             data.access_token = encryption_service_1.encryptionService.safeDecrypt(data.access_token);
@@ -67,14 +67,20 @@ const getConnectedPlatform = async (userId, platform) => {
             throw new Error('Failed to decrypt access token');
         }
     }
+    if (data && data.refresh_token) {
+        data.refresh_token = encryption_service_1.encryptionService.safeDecrypt(data.refresh_token);
+    }
     return data;
 };
 exports.getConnectedPlatform = getConnectedPlatform;
 const saveConnectedPlatform = async (platformData) => {
-    // Encrypt access token before saving
+    // Encrypt tokens before saving
     const dataToSave = { ...platformData };
     if (dataToSave.access_token) {
         dataToSave.access_token = encryption_service_1.encryptionService.encrypt(dataToSave.access_token);
+    }
+    if (dataToSave.refresh_token) {
+        dataToSave.refresh_token = encryption_service_1.encryptionService.encrypt(dataToSave.refresh_token);
     }
     const { data, error } = await exports.supabase
         .from('connected_platforms')
@@ -83,9 +89,12 @@ const saveConnectedPlatform = async (platformData) => {
         .single();
     if (error)
         throw error;
-    // Decrypt access token in the returned data (with backward compatibility)
+    // Decrypt tokens in the returned data (with backward compatibility)
     if (data && data.access_token) {
         data.access_token = encryption_service_1.encryptionService.safeDecrypt(data.access_token);
+    }
+    if (data && data.refresh_token) {
+        data.refresh_token = encryption_service_1.encryptionService.safeDecrypt(data.refresh_token);
     }
     return data;
 };

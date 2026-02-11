@@ -60,7 +60,7 @@ export const getConnectedPlatform = async (userId: string, platform: 'youtube' |
 
     if (error) throw error;
 
-    // Decrypt access token before returning (with backward compatibility)
+    // Decrypt tokens before returning (with backward compatibility)
     if (data && data.access_token) {
         try {
             data.access_token = encryptionService.safeDecrypt(data.access_token);
@@ -69,15 +69,21 @@ export const getConnectedPlatform = async (userId: string, platform: 'youtube' |
             throw new Error('Failed to decrypt access token');
         }
     }
+    if (data && data.refresh_token) {
+        data.refresh_token = encryptionService.safeDecrypt(data.refresh_token);
+    }
 
     return data;
 };
 
 export const saveConnectedPlatform = async (platformData: any) => {
-    // Encrypt access token before saving
+    // Encrypt tokens before saving
     const dataToSave = { ...platformData };
     if (dataToSave.access_token) {
         dataToSave.access_token = encryptionService.encrypt(dataToSave.access_token);
+    }
+    if (dataToSave.refresh_token) {
+        dataToSave.refresh_token = encryptionService.encrypt(dataToSave.refresh_token);
     }
 
     const { data, error } = await supabase
@@ -88,9 +94,12 @@ export const saveConnectedPlatform = async (platformData: any) => {
 
     if (error) throw error;
 
-    // Decrypt access token in the returned data (with backward compatibility)
+    // Decrypt tokens in the returned data (with backward compatibility)
     if (data && data.access_token) {
         data.access_token = encryptionService.safeDecrypt(data.access_token);
+    }
+    if (data && data.refresh_token) {
+        data.refresh_token = encryptionService.safeDecrypt(data.refresh_token);
     }
 
     return data;
