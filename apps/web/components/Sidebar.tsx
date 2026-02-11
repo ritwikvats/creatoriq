@@ -10,7 +10,6 @@ export default function Sidebar() {
     const navigation = [
         { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
         { icon: Briefcase, label: 'Brand Deals', href: '/deals' },
-        { icon: Youtube, label: 'YouTube', href: '/youtube' },
         { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
         { name: 'Audience', href: '/dashboard/audience', icon: Users },
         { name: 'Competitors', href: '/dashboard/competitors', icon: Swords },
