@@ -9,6 +9,10 @@ const faqs = [
         a: 'CreatorIQ is a unified analytics dashboard for content creators. It brings together YouTube, Instagram, revenue tracking, tax calculations, and brand deal management into one platform designed for Indian creators.',
     },
     {
+        q: 'Is my data safe? Can someone hack or scrape it?',
+        a: 'Your data is fully protected. Every page and feature requires you to be logged in — nobody can see your data without your account credentials. Your YouTube and Instagram tokens are encrypted so even if someone accessed the database, they cannot read them. Each user can only see their own data — there is no way to view another creator\'s analytics, revenue, or deals. We also block excessive requests to prevent bots, and only our official website can communicate with our servers.',
+    },
+    {
         q: 'Is CreatorIQ free to use?',
         a: 'Yes, CreatorIQ is currently free to use. We may introduce premium features in the future, but we will notify all users 30 days before any pricing changes.',
     },
