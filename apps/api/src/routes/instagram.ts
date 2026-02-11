@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import * as instagramService from '../services/instagram.service';
 import { saveConnectedPlatform, saveAnalyticsSnapshot } from '../services/supabase.service';
 import { requireAuth } from '../middleware/auth.middleware';
@@ -9,7 +10,15 @@ const router = Router();
 router.get('/auth', requireAuth, (req, res, next) => {
     try {
         const userId = req.user!.id;
-        const authUrl = instagramService.getAuthUrl(userId);
+
+        // Generate signed state token to prevent CSRF and account linking attacks
+        const secret = process.env.JWT_SECRET || 'fallback-secret';
+        const expiry = Date.now() + 10 * 60 * 1000; // 10 min
+        const payload = `${userId}:instagram:${expiry}`;
+        const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+        const stateToken = Buffer.from(`${payload}:${signature}`).toString('base64url');
+
+        const authUrl = instagramService.getAuthUrl(stateToken);
         res.json({ authUrl });
     } catch (error: any) {
         console.error('Instagram auth error:', error);
@@ -36,11 +45,22 @@ router.get('/callback', async (req, res) => {
             throw new Error('No Instagram Business Account found');
         }
 
-        // Get user ID from state parameter (passed through OAuth flow)
-        const userId = state as string || req.query.userId as string;
-
-        if (!userId) {
-            throw new Error('No user ID provided in OAuth state');
+        // Verify signed state token to prevent CSRF/account linking attacks
+        let userId: string;
+        try {
+            const secret = process.env.JWT_SECRET || 'fallback-secret';
+            const decoded = Buffer.from(state as string, 'base64url').toString();
+            const parts = decoded.split(':');
+            if (parts.length !== 4) throw new Error('Invalid state format');
+            const [uid, purpose, expiry, sig] = parts;
+            if (purpose !== 'instagram') throw new Error('Wrong purpose');
+            if (Date.now() > parseInt(expiry)) throw new Error('State expired');
+            const expected = crypto.createHmac('sha256', secret).update(`${uid}:${purpose}:${expiry}`).digest('hex');
+            if (sig !== expected) throw new Error('Invalid signature');
+            userId = uid;
+        } catch (err) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3004';
+            return res.redirect(`${frontendUrl}/dashboard?error=invalid_state`);
         }
 
         // Get account insights

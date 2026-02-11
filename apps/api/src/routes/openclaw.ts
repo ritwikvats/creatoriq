@@ -102,15 +102,10 @@ router.post('/technical-content', requireAuth, async (req: Request, res: Respons
  * GET /openclaw/status
  * Check OpenClaw service availability
  */
-router.get('/status', (req: Request, res: Response) => {
-    const available = openClawService.isAvailable();
-
+router.get('/status', requireAuth, (req: Request, res: Response) => {
     res.json({
-        provider: 'OpenClaw',
-        available,
-        message: available
-            ? 'OpenClaw AI is ready'
-            : 'OpenClaw AI is not configured (set OPENCLAW_API_KEY)'
+        status: 'operational',
+        available: openClawService.isAvailable(),
     });
 });
 

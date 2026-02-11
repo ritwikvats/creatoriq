@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { youtubeService } from '../services/youtube.service';
 import { getSupabaseClient, saveConnectedPlatform, saveAnalyticsSnapshot } from '../services/supabase.service';
 import { requireAuth } from '../middleware/auth.middleware';
@@ -15,12 +16,16 @@ router.get('/auth', requireAuth, async (req, res, next) => {
     try {
         const userId = req.user!.id;
 
-        // Generate OAuth URL with state parameter
-        const authUrl = youtubeService.getAuthUrl();
-        const urlWithState = `${authUrl}&state=${userId}`;
+        // Generate signed state token to prevent CSRF and account linking attacks
+        const secret = process.env.JWT_SECRET || 'fallback-secret';
+        const expiry = Date.now() + 10 * 60 * 1000; // 10 min
+        const payload = `${userId}:youtube:${expiry}`;
+        const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+        const stateToken = Buffer.from(`${payload}:${signature}`).toString('base64url');
 
-        // Return the OAuth URL instead of redirecting
-        // This allows the frontend to handle the redirect with proper auth headers
+        const authUrl = youtubeService.getAuthUrl();
+        const urlWithState = `${authUrl}&state=${stateToken}`;
+
         res.json({ authUrl: urlWithState });
     } catch (error: any) {
         console.error('YouTube auth error:', error);
@@ -34,14 +39,31 @@ router.get('/auth', requireAuth, async (req, res, next) => {
  */
 router.get('/callback', async (req, res) => {
     const { code, state } = req.query;
-    const userId = state as string;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3004';
 
     if (!code) {
-        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?error=no_code`);
+        return res.redirect(`${frontendUrl}/dashboard?error=no_code`);
     }
 
-    if (!userId) {
-        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?error=no_user`);
+    if (!state) {
+        return res.redirect(`${frontendUrl}/dashboard?error=no_state`);
+    }
+
+    // Verify the signed state token to prevent CSRF/account linking attacks
+    let userId: string;
+    try {
+        const secret = process.env.JWT_SECRET || 'fallback-secret';
+        const decoded = Buffer.from(state as string, 'base64url').toString();
+        const parts = decoded.split(':');
+        if (parts.length !== 4) throw new Error('Invalid state format');
+        const [uid, purpose, expiry, sig] = parts;
+        if (purpose !== 'youtube') throw new Error('Wrong purpose');
+        if (Date.now() > parseInt(expiry)) throw new Error('State expired');
+        const expected = crypto.createHmac('sha256', secret).update(`${uid}:${purpose}:${expiry}`).digest('hex');
+        if (sig !== expected) throw new Error('Invalid signature');
+        userId = uid;
+    } catch (err) {
+        return res.redirect(`${frontendUrl}/dashboard?error=invalid_state`);
     }
 
     try {

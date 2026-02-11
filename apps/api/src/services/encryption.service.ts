@@ -20,9 +20,12 @@ export class EncryptionService {
         const salt = process.env.ENCRYPTION_SALT || 'creatoriq-platform-salt-v1';
 
         if (!key) {
-            console.warn('⚠️ ENCRYPTION_KEY not set in environment. Using fallback (NOT SECURE FOR PRODUCTION)');
-            // Fallback for development - MUST be replaced in production
-            this.encryptionKey = crypto.scryptSync('creatoriq-dev-key', salt, KEY_LENGTH);
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error('ENCRYPTION_KEY environment variable is required in production');
+            }
+            // Development only: generate a random key per session (tokens won't persist across restarts)
+            console.warn('⚠️ ENCRYPTION_KEY not set. Using random key (dev only, tokens will not persist)');
+            this.encryptionKey = crypto.randomBytes(KEY_LENGTH);
         } else {
             // Derive key from environment variable with proper salt
             this.encryptionKey = crypto.scryptSync(key, salt, KEY_LENGTH);
