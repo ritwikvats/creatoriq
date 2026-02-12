@@ -79,35 +79,43 @@ function AnalyticsContent() {
         try {
             setLoading(true);
 
-            // Fetch YouTube stats (authenticated - no userId in URL)
-            let ytData: any = { connected: false };
+            // Step 1: Check connection status (lightweight DB-only calls)
+            let ytStatus: any = { connected: false };
+            let igStatus: any = { connected: false };
             try {
-                ytData = await api.get('/youtube/stats');
+                ytStatus = await api.get('/youtube/status');
             } catch (err) {
-                console.log('YouTube data not available');
+                console.log('YouTube status check failed');
+            }
+            try {
+                igStatus = await api.get('/instagram/status');
+            } catch (err) {
+                console.log('Instagram status check failed');
             }
 
-            // Fetch Instagram status (authenticated - no userId in URL)
-            let igData: any = { connected: false };
-            try {
-                igData = await api.get('/instagram/status');
-            } catch (err) {
-                console.log('Instagram data not available');
+            // Step 2: If connected, try to get detailed stats (non-blocking)
+            let ytStats: any = {};
+            if (ytStatus.connected) {
+                try {
+                    ytStats = await api.get('/youtube/stats');
+                } catch (err) {
+                    console.log('YouTube stats not available (quota may be exceeded)');
+                }
             }
 
             setStats({
                 youtube: {
-                    connected: ytData.connected || false,
-                    subscribers: ytData.channel?.subscriberCount || 0,
-                    views: ytData.channel?.totalViews || 0,
-                    videos: ytData.channel?.totalVideos || 0,
-                    channelName: ytData.channel?.channelName,
+                    connected: ytStatus.connected || false,
+                    subscribers: ytStats.channel?.subscriberCount || 0,
+                    views: ytStats.channel?.totalViews || 0,
+                    videos: ytStats.channel?.totalVideos || 0,
+                    channelName: ytStatus.channelName || ytStats.channel?.channelName,
                 },
                 instagram: {
-                    connected: igData.connected || false,
-                    username: igData.username,
-                    followers: igData.followers || 0,
-                    posts: igData.posts || 0,
+                    connected: igStatus.connected || false,
+                    username: igStatus.username,
+                    followers: igStatus.followers || 0,
+                    posts: igStatus.posts || 0,
                 },
             });
         } catch (err) {

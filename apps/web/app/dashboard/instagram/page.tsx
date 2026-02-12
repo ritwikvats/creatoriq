@@ -66,7 +66,7 @@ export default function InstagramAnalyticsPage() {
             <DashboardLayout>
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
                     <button
-                        onClick={() => router.back()}
+                        onClick={() => router.push('/dashboard/analytics')}
                         className="flex items-center gap-2 text-dark-600 hover:text-dark-800 mb-6"
                     >
                         <ArrowLeft className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function InstagramAnalyticsPage() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/dashboard/analytics')}
                             className="flex items-center gap-2 text-dark-600 hover:text-dark-800"
                         >
                             <ArrowLeft className="w-4 h-4" />
