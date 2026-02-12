@@ -69,12 +69,12 @@ Go to: https://console.cloud.google.com/apis/credentials/consent
 | Field | What to Provide | Example |
 |-------|----------------|---------|
 | **App Name** | Your product name | CreatorIQ |
-| **User Support Email** | Support email | support@creatoriq.app |
+| **User Support Email** | Support email | support@creatoriq.in |
 | **App Logo** | 120x120px logo | Upload your logo |
-| **App Domain** | Your website | https://creatoriq.app |
-| **Privacy Policy URL** | Privacy policy page | https://creatoriq.app/privacy |
-| **Terms of Service URL** | Terms page | https://creatoriq.app/terms |
-| **Authorized Domains** | Domain list | creatoriq.app |
+| **App Domain** | Your website | https://creatoriq.in |
+| **Privacy Policy URL** | Privacy policy page | https://creatoriq.in/privacy |
+| **Terms of Service URL** | Terms page | https://creatoriq.in/terms |
+| **Authorized Domains** | Domain list | creatoriq.in |
 
 **Scopes to Declare:**
 
@@ -199,9 +199,9 @@ Go to: https://developers.facebook.com/apps/YOUR_APP_ID/settings/basic/
 | Field | What to Provide |
 |-------|----------------|
 | **App Name** | CreatorIQ |
-| **Contact Email** | support@creatoriq.app |
-| **Privacy Policy URL** | https://creatoriq.app/privacy |
-| **Terms of Service URL** | https://creatoriq.app/terms |
+| **Contact Email** | support@creatoriq.in |
+| **Privacy Policy URL** | https://creatoriq.in/privacy |
+| **Terms of Service URL** | https://creatoriq.in/terms |
 | **App Icon** | 1024x1024px PNG |
 | **Category** | Business and Pages |
 | **Business Use Case** | Analytics |
@@ -243,7 +243,7 @@ Example for `instagram_manage_insights`:
 
 ```markdown
 **How to Test:**
-1. Go to https://creatoriq.app
+1. Go to https://creatoriq.in
 2. Click "Sign Up" and create an account (email: test@test.com, password: test123)
 3. After signup, you'll see the Dashboard
 4. Click "Connect Instagram" button
@@ -260,7 +260,7 @@ and analytics on their dashboard. This helps creators understand their audience
 and make data-driven decisions about content.
 
 **Test Credentials:**
-Email: test@creatoriq.app
+Email: test@creatoriq.in
 Password: TestPass123!
 (Or use your own Instagram Business account)
 ```
@@ -350,7 +350,7 @@ Before submitting, verify:
 | **Business Registration Certificate** | Prove you're a registered business |
 | **GST Certificate** | For Indian businesses |
 | **Company Website** | Proof of legitimacy |
-| **Business Email** | support@creatoriq.app |
+| **Business Email** | support@creatoriq.in |
 | **Business Phone** | Verified contact number |
 
 **How to Submit:**
@@ -437,10 +437,10 @@ gantt
 
 ### Before Submitting
 
-- [ ] **Website is live** (creatoriq.app)
+- [ ] **Website is live** (creatoriq.in)
 - [ ] **Privacy Policy** published and accessible
 - [ ] **Terms of Service** published
-- [ ] **Support email** active (support@creatoriq.app)
+- [ ] **Support email** active (support@creatoriq.in)
 - [ ] **App logo** created (multiple sizes)
 - [ ] **Demo video** recorded
 - [ ] **Screenshots** captured (5-10 images)
@@ -811,9 +811,9 @@ app.use(Sentry.Handlers.errorHandler());
 
 | Endpoint | Check Frequency | Alert On |
 |----------|----------------|----------|
-| `https://creatoriq.app` | 1 min | >30s response or down |
-| `https://api.creatoriq.app/health` | 1 min | Non-200 status |
-| `https://api.creatoriq.app/ai/status` | 5 min | AI services down |
+| `https://creatoriq.in` | 1 min | >30s response or down |
+| `https://api.creatoriq.in/health` | 1 min | Non-200 status |
+| `https://api.creatoriq.in/ai/status` | 5 min | AI services down |
 
 **Setup:** Just add URLs to UptimeRobot dashboard
 
@@ -1134,15 +1134,15 @@ export const metadata = {
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://creatoriq.app</loc>
+    <loc>https://creatoriq.in</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://creatoriq.app/features</loc>
+    <loc>https://creatoriq.in/features</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://creatoriq.app/pricing</loc>
+    <loc>https://creatoriq.in/pricing</loc>
     <priority>0.8</priority>
   </url>
 </urlset>
@@ -1275,7 +1275,7 @@ ON revenue_entries(user_id, received_at DESC);
 - [ ] **Support Systems**
   - [ ] Help chat widget installed
   - [ ] FAQ page created
-  - [ ] Support email setup (support@creatoriq.app)
+  - [ ] Support email setup (support@creatoriq.in)
 
 ### Launch Day
 
@@ -1305,8 +1305,8 @@ ON revenue_entries(user_id, received_at DESC);
 | Role | Responsibility | Contact |
 |------|---------------|---------|
 | **DevOps** | Server issues, deployment | TBD |
-| **Support** | User queries | support@creatoriq.app |
-| **Security** | Data breaches, vulnerabilities | security@creatoriq.app |
+| **Support** | User queries | support@creatoriq.in |
+| **Security** | Data breaches, vulnerabilities | security@creatoriq.in |
 
 ---
 

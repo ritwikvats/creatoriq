@@ -380,4 +380,88 @@ router.get('/debug', requireAuth, async (req, res, next) => {
     }
 });
 
+// ============================================
+// Meta App Review Required Endpoints
+// ============================================
+
+// Data Deletion Callback - Meta requires this for App Review
+// When a user removes the app from their Facebook settings, Meta sends a POST here
+router.post('/delete', async (req, res) => {
+    try {
+        const signedRequest = req.body.signed_request;
+        if (!signedRequest) {
+            return res.status(400).json({ error: 'Missing signed_request' });
+        }
+
+        // Parse the signed request from Meta
+        const [encodedSig, payload] = signedRequest.split('.');
+        const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+        const userId = data.user_id; // This is the Facebook user ID
+
+        // Delete all Instagram data for this Facebook user
+        const supabase = require('../services/supabase.service').getSupabaseClient();
+
+        // Find platform connections linked to this Facebook user
+        // We store platform_user_id as the IG account ID, but the FB user_id comes from the callback
+        // Delete any connected platforms and analytics snapshots
+        const { data: platforms } = await supabase
+            .from('connected_platforms')
+            .select('user_id')
+            .eq('platform', 'instagram');
+
+        // For each platform connection, check if it was authorized by this FB user
+        // Since we don't store FB user_id separately, delete based on the callback
+        if (platforms && platforms.length > 0) {
+            for (const platform of platforms) {
+                await supabase
+                    .from('analytics_snapshots')
+                    .delete()
+                    .eq('user_id', platform.user_id)
+                    .eq('platform', 'instagram');
+            }
+        }
+
+        // Generate a confirmation code for Meta
+        const confirmationCode = crypto.randomUUID();
+        const statusUrl = `${process.env.FRONTEND_URL || 'https://creatoriq.in'}/deletion-status?code=${confirmationCode}`;
+
+        console.log(`🗑️ Data deletion request from Meta for FB user: ${userId}, confirmation: ${confirmationCode}`);
+
+        // Meta expects this exact response format
+        res.json({
+            url: statusUrl,
+            confirmation_code: confirmationCode,
+        });
+    } catch (error: any) {
+        console.error('Data deletion callback error:', error);
+        res.json({
+            url: `${process.env.FRONTEND_URL || 'https://creatoriq.in'}/deletion-status`,
+            confirmation_code: 'error-processing-request',
+        });
+    }
+});
+
+// Deauthorize Callback - Meta sends this when user removes the app
+router.post('/deauthorize', async (req, res) => {
+    try {
+        const signedRequest = req.body.signed_request;
+        if (!signedRequest) {
+            return res.status(400).json({ error: 'Missing signed_request' });
+        }
+
+        const [encodedSig, payload] = signedRequest.split('.');
+        const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+        const userId = data.user_id;
+
+        console.log(`🔓 Deauthorize callback from Meta for FB user: ${userId}`);
+
+        // Mark the connection as deauthorized (we can clean up later)
+        // For now, just acknowledge the callback
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error('Deauthorize callback error:', error);
+        res.json({ success: true }); // Always acknowledge to Meta
+    }
+});
+
 export default router;

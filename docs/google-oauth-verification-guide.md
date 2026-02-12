@@ -29,9 +29,9 @@
 - [ ] **YouTube Data API v3** enabled
 - [ ] **YouTube Analytics API** enabled
 - [ ] **OAuth 2.0 credentials** created (Web application)
-- [ ] **Privacy Policy** published at https://creatoriq.app/privacy ✅
-- [ ] **Terms of Service** published at https://creatoriq.app/terms ✅
-- [ ] **App is live** and accessible at https://creatoriq.app
+- [ ] **Privacy Policy** published at https://creatoriq.in/privacy ✅
+- [ ] **Terms of Service** published at https://creatoriq.in/terms ✅
+- [ ] **App is live** and accessible at https://creatoriq.in
 
 ### URLs You'll Need
 
@@ -65,11 +65,11 @@ Click **"CREATE"** or **"EDIT APP"** if already exists.
 | Field | Value | Required | Notes |
 |-------|-------|----------|-------|
 | **App name** | CreatorIQ | ✅ Yes | Displayed to users during OAuth |
-| **User support email** | support@creatoriq.app | ✅ Yes | Must be monitored |
+| **User support email** | support@creatoriq.in | ✅ Yes | Must be monitored |
 | **App logo** | Upload 120x120px image | ❌ Optional | Recommended for branding |
-| **Application home page** | https://creatoriq.app | ✅ Yes | Your landing page |
-| **Application privacy policy link** | https://creatoriq.app/privacy | ✅ Yes | ✅ Created by OpenClaw |
-| **Application terms of service link** | https://creatoriq.app/terms | ✅ Yes | ✅ Created by OpenClaw |
+| **Application home page** | https://creatoriq.in | ✅ Yes | Your landing page |
+| **Application privacy policy link** | https://creatoriq.in/privacy | ✅ Yes | ✅ Created by OpenClaw |
+| **Application terms of service link** | https://creatoriq.in/terms | ✅ Yes | ✅ Created by OpenClaw |
 
 **Screenshot to take**: `google_oauth_app_info.png`
 
@@ -80,7 +80,7 @@ Click **"CREATE"** or **"EDIT APP"** if already exists.
 **Authorized domains** (add these):
 
 ```
-creatoriq.app
+creatoriq.in
 ```
 
 **Why needed**: Google verifies you own this domain before allowing OAuth.
@@ -195,7 +195,7 @@ I'll show how we use YouTube Data API and Analytics API to help creators
 understand their audience and improve their content."
 
 [0:30-1:00] Landing Page & Sign Up
-- Show https://creatoriq.app
+- Show https://creatoriq.in
 - Click "Sign Up"
 - Create test account
 - "Users create an account to access their analytics dashboard"
@@ -310,8 +310,8 @@ We only access data that belongs to the logged-in user. We do not access
 other users' channels, modify content, or upload videos. All data is displayed
 on the user's private analytics dashboard.
 
-Privacy Policy: https://creatoriq.app/privacy
-Terms of Service: https://creatoriq.app/terms
+Privacy Policy: https://creatoriq.in/privacy
+Terms of Service: https://creatoriq.in/terms
 ```
 
 #### Question 3: Provide additional context (if requested)
@@ -416,7 +416,7 @@ Best regards,
 [Your Title]
 CreatorIQ
 Email: [Your Email]
-App URL: https://creatoriq.app
+App URL: https://creatoriq.in
 ```
 
 ### Alternative: Limit Scope
@@ -493,11 +493,11 @@ channels. The increased quota will help us serve more creators effectively.
 
 ### Issue 1: "App Domain Not Verified"
 
-**Error**: "The domain creatoriq.app is not verified"
+**Error**: "The domain creatoriq.in is not verified"
 
 **Solution**:
 1. Go to Google Search Console: https://search.google.com/search-console
-2. Add property: https://creatoriq.app
+2. Add property: https://creatoriq.in
 3. Verify ownership:
    - **Option A**: Upload HTML file to root directory
    - **Option B**: Add DNS TXT record
@@ -565,10 +565,10 @@ Before submitting:
 
 ### OAuth Consent Screen
 - [ ] App name: CreatorIQ
-- [ ] User support email: support@creatoriq.app
-- [ ] Privacy policy URL: https://creatoriq.app/privacy ✅
-- [ ] Terms of service URL: https://creatoriq.app/terms ✅
-- [ ] Authorized domain: creatoriq.app (verified)
+- [ ] User support email: support@creatoriq.in
+- [ ] Privacy policy URL: https://creatoriq.in/privacy ✅
+- [ ] Terms of service URL: https://creatoriq.in/terms ✅
+- [ ] Authorized domain: creatoriq.in (verified)
 
 ### Scopes
 - [ ] youtube.readonly added

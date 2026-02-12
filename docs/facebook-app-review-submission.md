@@ -26,8 +26,8 @@
 
 ### Prerequisites Checklist
 
-- [ ] **Privacy Policy** published at https://creatoriq.app/privacy ✅ (Created by OpenClaw)
-- [ ] **Terms of Service** published at https://creatoriq.app/terms ✅ (Created by OpenClaw)
+- [ ] **Privacy Policy** published at https://creatoriq.in/privacy ✅ (Created by OpenClaw)
+- [ ] **Terms of Service** published at https://creatoriq.in/terms ✅ (Created by OpenClaw)
 - [ ] **App is working** - no errors in production
 - [ ] **Test Instagram Business account** ready for demo
 - [ ] **Screen recording software** installed (QuickTime/OBS)
@@ -60,9 +60,9 @@ URL: https://developers.facebook.com/apps/YOUR_APP_ID/settings/basic/
 |-------|-------|-------|
 | **App Name** | CreatorIQ | Must match branding |
 | **Display Name** | CreatorIQ | Public-facing name |
-| **Contact Email** | support@creatoriq.app | Must be monitored |
-| **Privacy Policy URL** | https://creatoriq.app/privacy | ✅ Already created |
-| **Terms of Service URL** | https://creatoriq.app/terms | ✅ Already created |
+| **Contact Email** | support@creatoriq.in | Must be monitored |
+| **Privacy Policy URL** | https://creatoriq.in/privacy | ✅ Already created |
+| **Terms of Service URL** | https://creatoriq.in/terms | ✅ Already created |
 | **App Icon** | Upload 1024x1024px PNG | Minimum requirement |
 | **Category** | Business and Pages | Best fit for analytics |
 | **Business Use Case** | Analytics | Primary purpose |
@@ -90,7 +90,7 @@ Copy this to the App Review submission form:
 ## Step-by-Step Testing Instructions
 
 ### 1. Create Account
-1. Go to https://creatoriq.app
+1. Go to https://creatoriq.in
 2. Click **"Sign Up"** in the top right
 3. Fill in:
    - Email: test@example.com (or your own)
@@ -175,7 +175,7 @@ from the connected Facebook Page.
 You can use your own Instagram Business account for testing.
 
 If you need a test account:
-- Email: test@creatoriq.app
+- Email: test@creatoriq.in
 - Password: TestPass123!
 (This test account has Instagram already connected)
 
@@ -185,7 +185,7 @@ Settings → Account → Delete Account
 
 ## Support Contact
 If you encounter any issues during testing:
-Email: support@creatoriq.app
+Email: support@creatoriq.in
 Response time: Within 24 hours
 ```
 
@@ -210,7 +210,7 @@ I'll show how we use Instagram API permissions to help creators understand
 their audience and improve their content strategy."
 
 [0:15-0:45] Landing Page & Signup
-- Show landing page (https://creatoriq.app)
+- Show landing page (https://creatoriq.in)
 - Click "Sign Up"
 - Fill in email, password, name
 - "The user creates an account to access their analytics dashboard"
@@ -280,7 +280,7 @@ their audience and improve their content strategy."
 Take screenshots of these screens and upload them to App Review:
 
 #### Screenshot 1: Landing Page
-- [ ] **URL**: https://creatoriq.app
+- [ ] **URL**: https://creatoriq.in
 - [ ] Shows branding and "Sign Up" button
 - [ ] Filename: `01_landing_page.png`
 
@@ -322,7 +322,7 @@ Take screenshots of these screens and upload them to App Review:
 - [ ] Filename: `07_disconnect_option.png`
 
 #### Screenshot 8: Privacy Policy Page (Optional)
-- [ ] URL: https://creatoriq.app/privacy
+- [ ] URL: https://creatoriq.in/privacy
 - [ ] Shows data collection and usage policy
 - [ ] Filename: `08_privacy_policy.png`
 
