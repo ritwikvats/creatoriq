@@ -31,10 +31,21 @@ export async function captureAnalyticsSnapshots() {
 
         let successCount = 0;
         let errorCount = 0;
+        let skippedCount = 0;
 
         // Process each connected platform
         for (const platform of connectedPlatforms) {
             try {
+                // Skip if last sync was less than 12 hours ago (saves quota)
+                if (platform.last_synced_at) {
+                    const hoursSinceSync = (Date.now() - new Date(platform.last_synced_at).getTime()) / (1000 * 60 * 60);
+                    if (hoursSinceSync < 12) {
+                        console.log(`⏭️ Skipping ${platform.platform} (${platform.platform_username}) - synced ${hoursSinceSync.toFixed(1)}h ago`);
+                        skippedCount++;
+                        continue;
+                    }
+                }
+
                 if (platform.platform === 'youtube') {
                     await captureYouTubeSnapshot(platform);
                     successCount++;
@@ -49,7 +60,7 @@ export async function captureAnalyticsSnapshots() {
         }
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`✅ Analytics snapshot complete: ${successCount} success, ${errorCount} errors (${duration}s)`);
+        console.log(`✅ Analytics snapshot complete: ${successCount} success, ${errorCount} errors, ${skippedCount} skipped (${duration}s)`);
     } catch (error: any) {
         console.error('❌ Analytics snapshot job failed:', error.message);
         throw error;
@@ -89,10 +100,11 @@ async function captureYouTubeSnapshot(platform: any) {
             }
         }
 
-        // Fetch current YouTube stats
+        // Fetch current YouTube stats (1 unit)
         const channelStats = await youtubeService.getChannelAnalytics(accessToken);
 
-        const recentVideos = await youtubeService.getVideoPerformance(accessToken, 10);
+        // Reuse channelId to avoid a second getChannelStats call
+        const recentVideos = await youtubeService.getVideoPerformance(accessToken, channelStats.channelId, 10);
 
         // Calculate engagement metrics
         // Note: youtube service returns { views, likes, comments } as numbers
