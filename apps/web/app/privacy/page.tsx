@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
             <div className="py-12 px-4">
             <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-8 md:p-12">
                 <h1 className="text-4xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
-                <p className="text-sm text-gray-600 mb-8">Last updated: February 8, 2026</p>
+                <p className="text-sm text-gray-600 mb-8">Last updated: February 12, 2026</p>
 
                 <div className="space-y-6 text-gray-700">
                     <section>
@@ -70,21 +70,49 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Third-Party Services</h2>
-                        <p className="mb-4">We integrate with:</p>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Instagram & Facebook Data</h2>
+                        <p className="mb-4">
+                            When you connect your Instagram Business or Creator account via Facebook Login, we access the following data through the Instagram Graph API:
+                        </p>
                         <ul className="list-disc list-inside space-y-2 ml-4">
-                            <li><strong>Google (YouTube):</strong> To fetch your channel analytics</li>
-                            <li><strong>Meta (Instagram):</strong> To fetch your Instagram Business account data</li>
-                            <li><strong>Supabase:</strong> For authentication and data storage</li>
+                            <li><strong>Profile Information:</strong> Username, profile picture, biography, follower count, following count, and media count</li>
+                            <li><strong>Media Data:</strong> Recent posts including images, captions, like counts, comment counts, and timestamps</li>
+                            <li><strong>Account Insights:</strong> Follower demographics (age, gender, country, city), account reach, impressions, and profile views</li>
+                        </ul>
+                        <p className="mt-4 font-semibold">How we use Instagram data:</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
+                            <li>Display your analytics on your private dashboard</li>
+                            <li>Calculate engagement rates and growth trends</li>
+                            <li>Generate AI-powered content and growth recommendations</li>
+                            <li>Build historical performance snapshots (daily)</li>
+                        </ul>
+                        <p className="mt-4 font-semibold">What we do NOT do with Instagram data:</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
+                            <li>We do NOT sell, rent, or share your Instagram data with any third parties</li>
+                            <li>We do NOT use your data for advertising or profiling</li>
+                            <li>We do NOT transfer your data to data brokers</li>
+                            <li>We do NOT store Instagram data beyond what is needed for analytics</li>
                         </ul>
                         <p className="mt-4">
-                            These services have their own privacy policies. We only request the minimum permissions needed
-                            to provide our services.
+                            When you disconnect Instagram from CreatorIQ, all associated Instagram data (profile, media, insights) is permanently deleted from our servers within 24 hours. You can disconnect at any time from your Dashboard.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Your Rights (GDPR & Indian Data Protection)</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Third-Party Services</h2>
+                        <p className="mb-4">We integrate with the following services, each governed by their own privacy policies:</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Google (YouTube):</strong> To fetch your channel analytics via YouTube Data API and YouTube Analytics API. Subject to <a href="https://policies.google.com/privacy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</li>
+                            <li><strong>Meta (Instagram/Facebook):</strong> To fetch your Instagram Business account data via Instagram Graph API. Subject to <a href="https://www.facebook.com/privacy/policy/" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Meta Privacy Policy</a>.</li>
+                            <li><strong>Supabase:</strong> For authentication and database storage</li>
+                        </ul>
+                        <p className="mt-4">
+                            We only request the minimum permissions needed to provide our services. We comply with the <a href="https://developers.facebook.com/terms/" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Meta Platform Terms</a> and <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Your Rights (GDPR & Indian Data Protection)</h2>
                         <p className="mb-4">You have the right to:</p>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li><strong>Access:</strong> Request a copy of your data</li>
@@ -94,20 +122,26 @@ export default function PrivacyPolicyPage() {
                             <li><strong>Withdraw Consent:</strong> Disconnect platforms at any time</li>
                         </ul>
                         <p className="mt-4">
-                            To exercise these rights, visit Settings → Data & Privacy or contact us at privacy@creatoriq.com
+                            To exercise these rights, visit Settings → Data & Privacy or contact us at privacy@creatoriq.in
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Data Retention</h2>
-                        <p>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Data Retention & Deletion</h2>
+                        <p className="mb-4">
                             We retain your data as long as your account is active. When you delete your account,
                             we permanently delete all your data within 30 days, except where required by law to retain it longer.
                         </p>
+                        <p className="mb-4">
+                            <strong>Platform data deletion:</strong> When you disconnect a platform (YouTube or Instagram), all data from that platform is deleted from our servers within 24 hours.
+                        </p>
+                        <p>
+                            <strong>Facebook Data Deletion:</strong> You can request deletion of your data by visiting Settings in your CreatorIQ dashboard and clicking "Delete Account", or by emailing <strong>privacy@creatoriq.in</strong>. You may also request data deletion directly from your Facebook Settings under "Apps and Websites". We process all deletion requests within 24 hours.
+                        </p>
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Cookies & Tracking</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Cookies & Tracking</h2>
                         <p>
                             We use essential cookies for authentication and session management. We do not use
                             third-party tracking cookies or sell your data to advertisers.
@@ -115,7 +149,14 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Changes to This Policy</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Age Restriction</h2>
+                        <p>
+                            CreatorIQ is intended for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided us with personal data, we will delete it immediately.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Changes to This Policy</h2>
                         <p>
                             We may update this privacy policy from time to time. We will notify you of significant
                             changes via email or in-app notification. Continued use of CreatorIQ after changes
@@ -124,11 +165,12 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Contact Us</h2>
-                        <p className="mb-2">If you have questions about this privacy policy:</p>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Contact Us</h2>
+                        <p className="mb-2">If you have questions about this privacy policy or want to exercise your data rights:</p>
                         <ul className="space-y-1 ml-4">
-                            <li><strong>Email:</strong> privacy@creatoriq.com</li>
-                            <li><strong>Address:</strong> CreatorIQ, Bangalore, India</li>
+                            <li><strong>Email:</strong> privacy@creatoriq.in</li>
+                            <li><strong>Website:</strong> https://creatoriq.in</li>
+                            <li><strong>Address:</strong> CreatorIQ, Bangalore, Karnataka, India</li>
                         </ul>
                     </section>
 
