@@ -120,6 +120,7 @@ class YouTubeService {
                 totalVideos: parseInt(stats?.videoCount || '0'),
                 publishedAt: snippet?.publishedAt || new Date().toISOString(),
                 country: snippet?.country || '',
+                uploadsPlaylistId: channel.contentDetails?.relatedPlaylists?.uploads || '',
             };
         }
         catch (error) {
@@ -129,30 +130,31 @@ class YouTubeService {
     }
     /**
      * Get recent videos with detailed statistics
+     * Uses playlistItems.list (1 unit) instead of search.list (100 units)
      */
     async getRecentVideos(accessToken, channelId, maxResults = 10) {
         try {
             this.getOAuthClient().setCredentials({ access_token: accessToken });
             const youtube = googleapis_1.google.youtube({ version: 'v3', auth: this.getOAuthClient() });
-            // Search for recent uploads
-            const searchResponse = await youtube.search.list({
+            // Derive uploads playlist ID from channel ID (UC... → UU...)
+            const uploadsPlaylistId = 'UU' + channelId.substring(2);
+            // Use playlistItems.list (1 unit) instead of search.list (100 units)
+            const playlistResponse = await youtube.playlistItems.list({
                 part: ['snippet'],
-                channelId: channelId,
-                order: 'date',
-                type: ['video'],
+                playlistId: uploadsPlaylistId,
                 maxResults: maxResults,
             });
-            if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
+            if (!playlistResponse.data.items || playlistResponse.data.items.length === 0) {
                 return [];
             }
-            // Extract video IDs
-            const videoIds = searchResponse.data.items
-                .map((item) => item.id?.videoId)
+            // Extract video IDs from playlist items
+            const videoIds = playlistResponse.data.items
+                .map((item) => item.snippet?.resourceId?.videoId)
                 .filter(Boolean);
             if (videoIds.length === 0) {
                 return [];
             }
-            // Get detailed video statistics
+            // Get detailed video statistics (1 unit)
             const videosResponse = await youtube.videos.list({
                 part: ['snippet', 'statistics', 'contentDetails'],
                 id: videoIds,
@@ -327,17 +329,16 @@ class YouTubeService {
         try {
             this.getOAuthClient().setCredentials({ access_token: accessToken });
             const youtube = googleapis_1.google.youtube({ version: 'v3', auth: this.getOAuthClient() });
-            // Fetch recent videos (last 50) to analyze publishing patterns
-            const response = await youtube.search.list({
+            // Use playlistItems.list (1 unit) instead of search.list (100 units)
+            const uploadsPlaylistId = 'UU' + channelId.substring(2);
+            const response = await youtube.playlistItems.list({
                 part: ['snippet'],
-                channelId: channelId,
-                order: 'date',
-                type: ['video'],
-                maxResults: 50
+                playlistId: uploadsPlaylistId,
+                maxResults: 50,
             });
             const videos = response.data.items || [];
             // Get detailed stats for each video
-            const videoIds = videos.map(v => v.id?.videoId).filter(Boolean);
+            const videoIds = videos.map(v => v.snippet?.resourceId?.videoId).filter(Boolean);
             // Guard: if no videos found, return early
             if (videoIds.length === 0) {
                 return {
@@ -436,5 +437,11 @@ const getTokensFromCode = (code) => exports.youtubeService.exchangeCodeForTokens
 exports.getTokensFromCode = getTokensFromCode;
 const getChannelAnalytics = (accessToken) => exports.youtubeService.getChannelStats(accessToken);
 exports.getChannelAnalytics = getChannelAnalytics;
-const getVideoPerformance = (accessToken, maxResults) => exports.youtubeService.getChannelStats(accessToken).then(stats => exports.youtubeService.getRecentVideos(accessToken, stats.channelId, maxResults));
+const getVideoPerformance = (accessToken, channelId, maxResults) => {
+    if (channelId) {
+        return exports.youtubeService.getRecentVideos(accessToken, channelId, maxResults);
+    }
+    // Fallback: fetch channelId first (costs 1 extra unit)
+    return exports.youtubeService.getChannelStats(accessToken).then(stats => exports.youtubeService.getRecentVideos(accessToken, stats.channelId, maxResults));
+};
 exports.getVideoPerformance = getVideoPerformance;
