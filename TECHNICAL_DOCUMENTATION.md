@@ -1188,7 +1188,7 @@ CreatorIQ/
 │       │   ├── dashboard/      # Dashboard pages
 │       │   │   ├── analytics/  # Analytics page
 │       │   │   ├── audience/   # Demographics page
-│       │   │   ├── competitors/ # Competitor analysis (planned)
+│       │   │   ├── competitors/ # Competitor analysis
 │       │   │   ├── instagram/  # Instagram detail page
 │       │   │   ├── revenue/    # Revenue tracking
 │       │   │   ├── settings/   # Settings page
