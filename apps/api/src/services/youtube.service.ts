@@ -310,17 +310,18 @@ class YouTubeService {
             }
 
             // Try to fetch age and gender demographics (requires YPP)
+            // YouTube Analytics API requires a country filter for age/gender
+            // Use the top country from geography data, fallback to IN (India)
             let ageGenderData: any[] = [];
+            const topCountry = geoData.length > 0 ? geoData[0].country : 'IN';
             try {
-                // Note: demographics require country filter for YouTube Analytics API
-                // Using requestBody to avoid paramsSerializer double-encoding the == operator
                 const ageGenderResponse = await youtubeAnalytics.reports.query({
                     ids: `channel==${channelId}`,
                     startDate: formatDate(startDate),
                     endDate: formatDate(endDate),
                     metrics: 'viewerPercentage',
                     dimensions: 'ageGroup,gender',
-                    filters: 'country==US',
+                    filters: `country==${topCountry}`,
                     sort: '-viewerPercentage',
                 });
 
@@ -336,6 +337,7 @@ class YouTubeService {
 
             return {
                 ageGender: ageGenderData,
+                ageGenderCountry: topCountry,
                 geography: geoData,
                 period: {
                     start: formatDate(startDate),
