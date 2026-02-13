@@ -295,7 +295,7 @@ class YouTubeService {
                     metrics: 'views',
                     dimensions: 'country',
                     sort: '-views',
-                    maxResults: 10,
+                    maxResults: 250,
                 });
 
                 // Filter out unknown country (ZZ) client-side instead
@@ -314,7 +314,7 @@ class YouTubeService {
             // So we query each top country separately and merge the weighted results
             let ageGenderData: any[] = [];
             const countriesToQuery = geoData.length > 0
-                ? geoData.slice(0, 5).map(g => g.country) // Top 5 countries
+                ? geoData.map(g => g.country) // All countries with views
                 : ['IN']; // Fallback
             const totalViews = geoData.reduce((sum, g) => sum + g.views, 0) || 1;
 
