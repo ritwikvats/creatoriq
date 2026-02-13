@@ -82,6 +82,15 @@ export default function AudiencePage() {
                             {demographics?.youtube?.error ? (
                                 <p className="text-gray-500 italic">{demographics.youtube.error}</p>
                             ) : demographics?.youtube ? (
+                                demographics.youtube.ageGender?.length === 0 && demographics.youtube.geography?.length === 0 ? (
+                                    <div className="text-center py-6">
+                                        <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        <p className="text-gray-500 font-medium">No audience data yet</p>
+                                        <p className="text-gray-400 text-sm mt-1">Upload videos to start seeing YouTube audience demographics</p>
+                                    </div>
+                                ) : (
                                 <div className="space-y-4">
                                     {/* Age & Gender */}
                                     {demographics.youtube.ageGender?.length > 0 && (
@@ -118,6 +127,7 @@ export default function AudiencePage() {
                                         </div>
                                     )}
                                 </div>
+                                )
                             ) : (
                                 <p className="text-gray-500 italic">Connect YouTube to see demographics</p>
                             )}
@@ -192,6 +202,12 @@ export default function AudiencePage() {
 
                             {postingTimes?.youtube?.error ? (
                                 <p className="text-gray-500 italic">{postingTimes.youtube.error}</p>
+                            ) : postingTimes?.youtube?.videosAnalyzed === 0 ? (
+                                <div className="text-center py-6">
+                                    <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                    <p className="text-gray-500 font-medium">No posting data yet</p>
+                                    <p className="text-gray-400 text-sm mt-1">Upload videos to see your best posting times</p>
+                                </div>
                             ) : postingTimes?.youtube ? (
                                 <div className="space-y-4">
                                     <div className="bg-red-50 rounded-lg p-4 border border-red-200">
