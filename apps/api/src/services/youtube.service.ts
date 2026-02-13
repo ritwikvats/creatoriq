@@ -309,27 +309,57 @@ class YouTubeService {
                 console.warn('Geography data not available:', geoError);
             }
 
-            // Try to fetch age and gender demographics (requires YPP)
-            // YouTube Analytics API requires a country filter for age/gender
-            // Use the top country from geography data, fallback to IN (India)
+            // Fetch age/gender demographics across top countries and combine
+            // YouTube Analytics API requires a country filter for age/gender queries
+            // So we query each top country separately and merge the weighted results
             let ageGenderData: any[] = [];
-            const topCountry = geoData.length > 0 ? geoData[0].country : 'IN';
-            try {
-                const ageGenderResponse = await youtubeAnalytics.reports.query({
-                    ids: `channel==${channelId}`,
-                    startDate: formatDate(startDate),
-                    endDate: formatDate(endDate),
-                    metrics: 'viewerPercentage',
-                    dimensions: 'ageGroup,gender',
-                    filters: `country==${topCountry}`,
-                    sort: '-viewerPercentage',
-                });
+            const countriesToQuery = geoData.length > 0
+                ? geoData.slice(0, 5).map(g => g.country) // Top 5 countries
+                : ['IN']; // Fallback
+            const totalViews = geoData.reduce((sum, g) => sum + g.views, 0) || 1;
 
-                ageGenderData = (ageGenderResponse.data.rows || []).map((row: any) => ({
-                    ageGroup: row[0],
-                    gender: row[1],
-                    percentage: parseFloat((row[2] * 100).toFixed(2))
-                }));
+            try {
+                // Query each country in parallel
+                const countryResults = await Promise.allSettled(
+                    countriesToQuery.map(async (country: string) => {
+                        const resp = await youtubeAnalytics.reports.query({
+                            ids: `channel==${channelId}`,
+                            startDate: formatDate(startDate),
+                            endDate: formatDate(endDate),
+                            metrics: 'viewerPercentage',
+                            dimensions: 'ageGroup,gender',
+                            filters: `country==${country}`,
+                            sort: '-viewerPercentage',
+                        });
+                        const countryViews = geoData.find(g => g.country === country)?.views || 0;
+                        const weight = countryViews / totalViews;
+                        return { rows: resp.data.rows || [], weight, country };
+                    })
+                );
+
+                // Combine weighted results across countries
+                const combined: Record<string, { ageGroup: string; gender: string; weightedPct: number }> = {};
+                for (const result of countryResults) {
+                    if (result.status !== 'fulfilled') continue;
+                    const { rows, weight } = result.value;
+                    for (const row of rows) {
+                        const key = `${row[0]}|${row[1]}`;
+                        if (!combined[key]) {
+                            combined[key] = { ageGroup: row[0], gender: row[1], weightedPct: 0 };
+                        }
+                        combined[key].weightedPct += (row[2] || 0) * weight;
+                    }
+                }
+
+                // Normalize percentages to sum to 100
+                const totalPct = Object.values(combined).reduce((s, v) => s + v.weightedPct, 0) || 1;
+                ageGenderData = Object.values(combined)
+                    .map(v => ({
+                        ageGroup: v.ageGroup,
+                        gender: v.gender,
+                        percentage: parseFloat(((v.weightedPct / totalPct) * 100).toFixed(2))
+                    }))
+                    .sort((a, b) => b.percentage - a.percentage);
             } catch (ageError: any) {
                 console.warn('Age/gender demographics not available:', ageError.message);
                 // This is expected for channels not in YPP
@@ -337,7 +367,7 @@ class YouTubeService {
 
             return {
                 ageGender: ageGenderData,
-                ageGenderCountry: topCountry,
+                countriesAnalyzed: countriesToQuery,
                 geography: geoData,
                 period: {
                     start: formatDate(startDate),
