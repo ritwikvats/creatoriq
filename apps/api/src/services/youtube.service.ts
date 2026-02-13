@@ -33,7 +33,7 @@ class YouTubeService {
             'https://www.googleapis.com/auth/youtube.readonly',
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/yt-analytics-monetary.readonly', // Added for revenue
+            'https://www.googleapis.com/auth/yt-analytics-monetary.readonly', // Analytics + revenue
         ];
 
         return this.getOAuthClient().generateAuthUrl({
@@ -320,6 +320,7 @@ class YouTubeService {
                     endDate: formatDate(endDate),
                     metrics: 'viewerPercentage',
                     dimensions: 'ageGroup,gender',
+                    filters: 'country==US',
                     sort: '-viewerPercentage',
                 });
 
