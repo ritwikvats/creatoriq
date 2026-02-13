@@ -312,11 +312,13 @@ class YouTubeService {
             // Fetch age/gender demographics across top countries and combine
             // YouTube Analytics API requires a country filter for age/gender queries
             // So we query each top country separately and merge the weighted results
+            // Limit to top 10 countries to avoid rate limiting
             let ageGenderData: any[] = [];
             const countriesToQuery = geoData.length > 0
-                ? geoData.map(g => g.country) // All countries with views
+                ? geoData.slice(0, 10).map(g => g.country) // Top 10 countries by views
                 : ['IN']; // Fallback
-            const totalViews = geoData.reduce((sum, g) => sum + g.views, 0) || 1;
+            const queriedGeoData = geoData.slice(0, 10);
+            const totalViews = queriedGeoData.reduce((sum, g) => sum + g.views, 0) || 1;
 
             try {
                 // Query each country in parallel
