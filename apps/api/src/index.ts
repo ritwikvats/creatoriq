@@ -171,6 +171,20 @@ app.listen(PORT, () => {
 
     // Initialize background jobs (tax sync, etc.)
     initializeCronJobs();
+
+    // Keep-alive: ping self every 14 minutes to prevent Render free tier sleep
+    if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+        const keepAliveUrl = `${process.env.RENDER_EXTERNAL_URL}/health`;
+        setInterval(async () => {
+            try {
+                await fetch(keepAliveUrl);
+                console.log('🏓 Keep-alive ping sent');
+            } catch (err) {
+                console.warn('🏓 Keep-alive ping failed:', (err as Error).message);
+            }
+        }, 14 * 60 * 1000); // 14 minutes
+        console.log(`🏓 Keep-alive enabled: pinging ${keepAliveUrl} every 14 min`);
+    }
 });
 
 export default app;
