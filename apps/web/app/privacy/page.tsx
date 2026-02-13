@@ -99,7 +99,41 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Third-Party Services</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">5. YouTube & Google Data</h2>
+                        <p className="mb-4">
+                            When you connect your YouTube channel via Google OAuth, we access the following data through the YouTube Data API v3 and YouTube Analytics API v2:
+                        </p>
+                        <ul className="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Channel Information:</strong> Channel name, subscriber count, total views, video count, profile picture, and publish date</li>
+                            <li><strong>Video Data:</strong> Recent uploads including titles, thumbnails, view counts, like counts, comment counts, and publish dates</li>
+                            <li><strong>Analytics & Demographics:</strong> Audience geography (views by country), age and gender breakdown (viewer percentages), and estimated revenue (for monetized channels)</li>
+                        </ul>
+                        <p className="mt-4 font-semibold">How we use YouTube data:</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
+                            <li>Display your channel analytics on your private dashboard</li>
+                            <li>Calculate engagement rates and identify top-performing content</li>
+                            <li>Analyze best posting times based on your upload history</li>
+                            <li>Show audience demographics to help you understand your viewers</li>
+                            <li>Display estimated revenue trends (monetized channels only)</li>
+                        </ul>
+                        <p className="mt-4 font-semibold">What we do NOT do with YouTube data:</p>
+                        <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
+                            <li>We do NOT sell, rent, or share your YouTube data with any third parties</li>
+                            <li>We do NOT use your data for advertising, profiling, or any purpose unrelated to providing analytics</li>
+                            <li>We do NOT transfer your data to data brokers</li>
+                            <li>We do NOT allow humans to read your data unless required for security purposes, with your consent, or to comply with law</li>
+                        </ul>
+                        <p className="mt-4">
+                            When you disconnect YouTube from CreatorIQ, all associated YouTube data (channel info, videos, analytics, tokens) is permanently deleted from our servers within 24 hours. You can disconnect at any time from your Dashboard.
+                        </p>
+                        <p className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                            <strong>Google API Services User Data Policy:</strong> CreatorIQ&apos;s use and transfer to any other app of information received from Google APIs will adhere to the{' '}
+                            <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Third-Party Services</h2>
                         <p className="mb-4">We integrate with the following services, each governed by their own privacy policies:</p>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li><strong>Google (YouTube):</strong> To fetch your channel analytics via YouTube Data API and YouTube Analytics API. Subject to <a href="https://policies.google.com/privacy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</li>
@@ -112,7 +146,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Your Rights (GDPR & Indian Data Protection)</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Your Rights (GDPR & Indian Data Protection)</h2>
                         <p className="mb-4">You have the right to:</p>
                         <ul className="list-disc list-inside space-y-2 ml-4">
                             <li><strong>Access:</strong> Request a copy of your data</li>
@@ -127,7 +161,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Data Retention & Deletion</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Data Retention & Deletion</h2>
                         <p className="mb-4">
                             We retain your data as long as your account is active. When you delete your account,
                             we permanently delete all your data within 30 days, except where required by law to retain it longer.
@@ -141,7 +175,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Cookies & Tracking</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Cookies & Tracking</h2>
                         <p>
                             We use essential cookies for authentication and session management. We do not use
                             third-party tracking cookies or sell your data to advertisers.
@@ -149,14 +183,14 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Age Restriction</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Age Restriction</h2>
                         <p>
                             CreatorIQ is intended for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided us with personal data, we will delete it immediately.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Changes to This Policy</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Changes to This Policy</h2>
                         <p>
                             We may update this privacy policy from time to time. We will notify you of significant
                             changes via email or in-app notification. Continued use of CreatorIQ after changes
@@ -165,7 +199,7 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Contact Us</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Contact Us</h2>
                         <p className="mb-2">If you have questions about this privacy policy or want to exercise your data rights:</p>
                         <ul className="space-y-1 ml-4">
                             <li><strong>Email:</strong> privacy@creatoriq.in</li>
