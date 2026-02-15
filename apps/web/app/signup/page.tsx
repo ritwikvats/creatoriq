@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
+import posthog from '@/lib/posthog';
 
 export default function SignupPage() {
     const [email, setEmail] = useState('');
@@ -40,6 +41,13 @@ export default function SignupPage() {
                     email: email,
                     full_name: fullName,
                 });
+
+                // Identify user in PostHog
+                posthog.identify(data.user.id, {
+                    email: email,
+                    name: fullName,
+                });
+                posthog.capture('user_signed_up');
 
                 // Redirect to dashboard
                 router.push('/dashboard');

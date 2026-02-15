@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import { Mail, Lock, LogIn } from 'lucide-react';
+import posthog from '@/lib/posthog';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -28,6 +29,11 @@ export default function LoginPage() {
             if (error) throw error;
 
             if (data.user) {
+                posthog.identify(data.user.id, {
+                    email: data.user.email,
+                    name: data.user.user_metadata?.full_name || '',
+                });
+                posthog.capture('user_logged_in');
                 router.push('/dashboard');
             }
         } catch (err: any) {
